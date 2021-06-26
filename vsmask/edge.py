@@ -1,10 +1,11 @@
 
 import math
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional
+from enum import Enum
+from typing import Any, List, Optional, Tuple, cast
 
 import vapoursynth as vs
-from vsutil import Range, depth
+from vsutil import Range, depth, join, split
 
 from .util import max_expr, pick_px_op
 
@@ -87,6 +88,38 @@ class EdgeDetect(ABC):
     @abstractmethod
     def _get_matrices() -> List[List[float]]:
         pass
+
+
+class MinMax(EdgeDetect):
+    """Min/max mask with separate luma/chroma radii."""
+    class Morpho(Enum):
+        MINIMUM = core.std.Minimum
+        MAXIMUM = core.std.Maximum
+
+        def __call__(self, *args: Any, **kwargs: Any) -> vs.VideoNode:
+            return cast(vs.VideoNode, self.value(*args, **kwargs))
+
+    radii: Tuple[int, int, int]
+
+    def __init__(self, rady: int = 2, radc: int = 0) -> None:
+        super().__init__()
+        self.radii = (rady, radc, radc)
+
+    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        assert clip.format
+        planes = [
+            core.std.Expr([self._minmax(p, rad, self.Morpho.MAXIMUM), self._minmax(p, rad, self.Morpho.MINIMUM)], 'x y -')
+            for p, rad in zip(split(clip), self.radii)
+        ]
+        return planes[0] if len(planes) == 1 else join(planes, clip.format.color_family)
+
+    @staticmethod
+    def _minmax(clip: vs.VideoNode, iterations: int, morpho: Morpho) -> vs.VideoNode:
+        for i in range(1, iterations + 1):
+            coord = [0, 1, 0, 1, 1, 0, 1, 0] if (i % 3) != 1 else [1] * 8
+            clip = morpho(clip, coordinates=coord)
+        return clip
+
 
 
 class Laplacian1(EdgeDetect):
