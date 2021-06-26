@@ -1,12 +1,12 @@
 
 import math
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Any, List, Optional
 
 import vapoursynth as vs
 from vsutil import Range, depth
 
-from .util import pick_px_op, max_expr
+from .util import max_expr, pick_px_op
 
 core = vs.core
 
@@ -423,9 +423,8 @@ class ExKirsch(EdgeDetect):
         return max_expr(8)
 
 
-def get_all_edge_detects(clip: vs.VideoNode, **kwargs) -> List[vs.VideoNode]:
-    masks = [
-        edge_detect().get_mask(clip, **kwargs).text.Text(edge_detect.__name__)
+def get_all_edge_detects(clip: vs.VideoNode, **kwargs: Any) -> List[vs.VideoNode]:
+    return [
+        edge_detect().get_mask(clip, **kwargs).text.Text(edge_detect.__name__)  # type: ignore
         for edge_detect in EdgeDetect.__subclasses__()
     ]
-    return masks

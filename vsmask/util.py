@@ -11,15 +11,16 @@ def pick_px_op(
     use_expr: bool,
     expr: str,
     lut: Union[int, float, Sequence[int], Sequence[float], Callable[..., Any]],
-):
+) -> Callable[..., vs.VideoNode]:
     """
     Pick either std.Lut or std.Expr
 
     :param use_expr: [description]
 
-    :param operations: [description]
+    :param expr: [description]
+    :param lut: [description]
 
-    :return: partial[VideoNode]
+    :return: Callable[..., vs.VideoNode]
     """
     if use_expr:
         func = partial(core.std.Expr, expr=expr)
