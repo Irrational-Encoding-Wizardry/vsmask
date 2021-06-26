@@ -108,7 +108,11 @@ class MinMax(EdgeDetect):
     def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         assert clip.format
         planes = [
-            core.std.Expr([self._minmax(p, rad, self.Morpho.MAXIMUM), self._minmax(p, rad, self.Morpho.MINIMUM)], 'x y -')
+            core.std.Expr(
+                [self._minmax(p, rad, self.Morpho.MAXIMUM),
+                 self._minmax(p, rad, self.Morpho.MINIMUM)],
+                'x y -'
+            )
             for p, rad in zip(split(clip), self.radii)
         ]
         return planes[0] if len(planes) == 1 else join(planes, clip.format.color_family)
