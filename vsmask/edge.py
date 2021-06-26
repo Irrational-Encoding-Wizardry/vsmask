@@ -114,6 +114,10 @@ class MinMax(EdgeDetect):
         return planes[0] if len(planes) == 1 else join(planes, clip.format.color_family)
 
     @staticmethod
+    def _get_matrices() -> List[List[float]]:
+        return [[]]
+
+    @staticmethod
     def _minmax(clip: vs.VideoNode, iterations: int, morpho: Morpho) -> vs.VideoNode:
         for i in range(1, iterations + 1):
             coord = [0, 1, 0, 1, 1, 0, 1, 0] if (i % 3) != 1 else [1] * 8
