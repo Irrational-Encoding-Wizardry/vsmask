@@ -1,0 +1,2 @@
+VapourSynth>=51
+vsutil>=0.5.0
