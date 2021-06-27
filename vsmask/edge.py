@@ -1,8 +1,7 @@
 
 import math
 from abc import ABC, abstractmethod
-from enum import Enum
-from typing import Any, List, Optional, Tuple, cast
+from typing import Any, List, Optional, Tuple
 
 import vapoursynth as vs
 from vsutil import Range, depth, join, split
@@ -92,13 +91,6 @@ class EdgeDetect(ABC):
 
 class MinMax(EdgeDetect):
     """Min/max mask with separate luma/chroma radii."""
-    class Morpho(Enum):
-        MINIMUM = core.std.Minimum
-        MAXIMUM = core.std.Maximum
-
-        def __call__(self, *args: Any, **kwargs: Any) -> vs.VideoNode:
-            return cast(vs.VideoNode, self.value(*args, **kwargs))
-
     radii: Tuple[int, int, int]
 
     def __init__(self, rady: int = 2, radc: int = 0) -> None:
@@ -107,12 +99,23 @@ class MinMax(EdgeDetect):
 
     def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         assert clip.format
+
+        def _minmax(clip: vs.VideoNode, iterations: int) -> Tuple[vs.VideoNode, vs.VideoNode]:
+            def _getcoord(i: int) -> List[int]:
+                return [0, 1, 0, 1, 1, 0, 1, 0] if (i % 3) != 1 else [1] * 8
+
+            clip_max = clip
+            for i in range(1, iterations + 1):
+                clip_max = clip_max.std.Maximum(coordinates=_getcoord(i))
+
+            clip_min = clip
+            for i in range(1, iterations + 1):
+                clip_min = clip_min.std.Minimum(coordinates=_getcoord(i))
+
+            return clip_max, clip_min
+
         planes = [
-            core.std.Expr(
-                [self._minmax(p, rad, self.Morpho.MAXIMUM),
-                 self._minmax(p, rad, self.Morpho.MINIMUM)],
-                'x y -'
-            )
+            core.std.Expr(_minmax(p, rad), 'x y -')
             for p, rad in zip(split(clip), self.radii)
         ]
         return planes[0] if len(planes) == 1 else join(planes, clip.format.color_family)
@@ -120,13 +123,6 @@ class MinMax(EdgeDetect):
     @staticmethod
     def _get_matrices() -> List[List[float]]:
         return [[]]
-
-    @staticmethod
-    def _minmax(clip: vs.VideoNode, iterations: int, morpho: Morpho) -> vs.VideoNode:
-        for i in range(1, iterations + 1):
-            coord = [0, 1, 0, 1, 1, 0, 1, 0] if (i % 3) != 1 else [1] * 8
-            clip = morpho(clip, coordinates=coord)
-        return clip
 
 
 
