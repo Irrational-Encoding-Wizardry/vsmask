@@ -19,7 +19,7 @@ class EdgeDetect(ABC):
                  lthr: float = 0.0, hthr: Optional[float] = None, multi: float = 1.0) -> vs.VideoNode:
         """
         Makes edge mask based on convolution kernel.
-        he resulting mask can be thresholded with lthr, hthr and multiplied with multi.
+        The resulting mask can be thresholded with lthr, hthr and multiplied with multi.
 
         :param clip:            Source clip
         :param lthr:            Low threshold. Anything below lthr will be set to 0
