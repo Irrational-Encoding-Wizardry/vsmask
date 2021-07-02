@@ -91,13 +91,15 @@ class MatrixEdgeDetect(EdgeDetect, ABC):
     def _get_mode_types(self) -> Sequence[str]:
         return self.mode_types if self.mode_types else ['s'] * len(self._get_matrices())
 
+    def _postprocess(self, clip: vs.VideoNode) -> vs.VideoNode:
+        if len(self.matrices[0]) > 9:
+            clip = clip.std.Crop(
+                right=clip.format.subsampling_w * 2 if clip.format and clip.format.subsampling_w != 0 else 2
+            ).resize.Point(clip.width, src_width=clip.width)
+        return clip
+
 
 class SingleMatrixDetect(MatrixEdgeDetect):
-    matrix: ClassVar[Sequence[float]]
-
-    def _get_matrices(self) -> Sequence[Sequence[float]]:
-        return [self.matrix]
-
     def _merge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
         return clips[0]
 
@@ -114,52 +116,52 @@ class MaxDetect(MatrixEdgeDetect):
 
 class Laplacian1(SingleMatrixDetect):
     """Pierre-Simon de Laplace operator 1st implementation. 3x3 matrix."""
-    matrix = [0, -1, 0, -1, 4, -1, 0, -1, 0]
+    matrices = [[0, -1, 0, -1, 4, -1, 0, -1, 0]]
 
 
 class Laplacian2(SingleMatrixDetect):
     """Pierre-Simon de Laplace operator 2nd implementation. 3x3 matrix."""
-    matrix = [1, -2, 1, -2, 4, -2, 1, -2, 1]
+    matrices = [[1, -2, 1, -2, 4, -2, 1, -2, 1]]
 
 
 class Laplacian3(SingleMatrixDetect):
     """Pierre-Simon de Laplace operator 3rd implementation. 3x3 matrix."""
-    matrix = [2, -1, 2, -1, -4, -1, 2, -1, 2]
+    matrices = [[2, -1, 2, -1, -4, -1, 2, -1, 2]]
 
 
 class Laplacian4(SingleMatrixDetect):
     """Pierre-Simon de Laplace operator 4th implementation. 3x3 matrix."""
-    matrix = [-1, -1, -1, -1, 8, -1, -1, -1, -1]
+    matrices = [[-1, -1, -1, -1, 8, -1, -1, -1, -1]]
 
 
 class Kayyali(SingleMatrixDetect):
     """Kayyali operator. 3x3 matrix."""
-    matrix = [6, 0, -6, 0, 0, 0, -6, 0, 6]
+    matrices = [[6, 0, -6, 0, 0, 0, -6, 0, 6]]
 
 
 class ExLaplacian1(SingleMatrixDetect):
     """Extended Pierre-Simon de Laplace operator 1st implementation. 5x5 matrix."""
-    matrix = [0, 0, -1, 0, 0, 0, 0, -1, 0, 0, -1, -1, 8, -1, -1, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0]
+    matrices = [[0, 0, -1, 0, 0, 0, 0, -1, 0, 0, -1, -1, 8, -1, -1, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0]]
 
 
 class ExLaplacian2(SingleMatrixDetect):
     """Extended Pierre-Simon de Laplace operator 2nd implementation. 5x5 matrix."""
-    matrix = [0, 1, -1, 1, 0, 1, 1, -4, 1, 1, -1, -4, 8, -4, -1, 1, 1, -4, 1, 1, 0, 1, -1, 1, 0]
+    matrices = [[0, 1, -1, 1, 0, 1, 1, -4, 1, 1, -1, -4, 8, -4, -1, 1, 1, -4, 1, 1, 0, 1, -1, 1, 0]]
 
 
 class ExLaplacian3(SingleMatrixDetect):
     """Extended Pierre-Simon de Laplace operator 3rd implementation. 5x5 matrix."""
-    matrix = [-1, 1, -1, 1, -1, 1, 2, -4, 2, 1, -1, -4, 8, -4, -1, 1, 2, -4, 2, 1, -1, 1, -1, 1, -1]
+    matrices = [[-1, 1, -1, 1, -1, 1, 2, -4, 2, 1, -1, -4, 8, -4, -1, 1, 2, -4, 2, 1, -1, 1, -1, 1, -1]]
 
 
 class ExLaplacian4(SingleMatrixDetect):
     """Extended Pierre-Simon de Laplace operator 4th implementation. 5x5 matrix."""
-    matrix = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 24, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
+    matrices = [[-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 24, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]]
 
 
 class LoG(SingleMatrixDetect):
     """Laplacian of Gaussian. 5x5 matrix."""
-    matrix = [0, 0, -1, 0, 0, 0, -1, -2, -1, 0, -1, -2, 16, -2, -1, 0, -1, -2, -1, 0, 0, 0, -1, 0, 0]
+    matrices = [[0, 0, -1, 0, 0, 0, -1, -2, -1, 0, -1, -2, 16, -2, -1, 0, -1, -2, -1, 0, 0, 0, -1, 0, 0]]
 
 
 class Roberts(EuclidianDistanceMatrixDetect):
