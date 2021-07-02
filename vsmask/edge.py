@@ -92,7 +92,7 @@ class MatrixEdgeDetect(EdgeDetect, ABC):
         return self.mode_types if self.mode_types else ['s'] * len(self._get_matrices())
 
     def _postprocess(self, clip: vs.VideoNode) -> vs.VideoNode:
-        if len(self.matrices[0]) > 9:
+        if len(self.matrices[0]) > 9 or (self.mode_types and self.mode_types[0] != 's'):
             clip = clip.std.Crop(
                 right=clip.format.subsampling_w * 2 if clip.format and clip.format.subsampling_w != 0 else 2
             ).resize.Point(clip.width, src_width=clip.width)
