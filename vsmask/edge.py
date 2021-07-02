@@ -402,6 +402,6 @@ def get_all_edge_detects(clip: vs.VideoNode, **kwargs: Any) -> List[vs.VideoNode
         }
     }
     return [
-        edge_detect().get_mask(clip, **kwargs).text.Text(edge_detect.__name__)
+        edge_detect().get_mask(clip, **kwargs).text.Text(edge_detect.__name__)  # type: ignore
         for edge_detect in sorted(all_subclasses, key=lambda x: x.__name__)
     ]
