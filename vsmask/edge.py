@@ -291,6 +291,17 @@ class Robinson5(MaxDetect):
     ]
 
 
+class TheToof(MaxDetect):
+    """TheToof compass operator from SharpAAMCmod. 3x3 matrices."""
+    matrices = [
+        [5, 10, 5, 0, 0, 0, -5, -10, -5],
+        [10, 5, 0, 5, 0, -5, 0, -5, -10],
+        [5, 0, -5, 10, 0, -10, 5, 0, -5],
+        [0, -5, -10, 5, 0, -5, 10, 5, 0]
+    ]
+    divisors = [4] * 4
+
+
 class Kirsch(MaxDetect):
     """Russell Kirsch compass operator. 3x3 matrices."""
     matrices = [
