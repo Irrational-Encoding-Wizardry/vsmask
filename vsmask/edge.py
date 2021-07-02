@@ -13,7 +13,7 @@ core = vs.core
 
 class EdgeDetect(ABC):
     """Abstract edge detection interface."""
-    bits: int
+    _bits: int
 
     def get_mask(self, clip: vs.VideoNode,
                  lthr: float = 0.0, hthr: Optional[float] = None, multi: float = 1.0) -> vs.VideoNode:
@@ -31,9 +31,9 @@ class EdgeDetect(ABC):
         if clip.format is None:
             raise ValueError('get_mask: Variable format not allowed!')
 
-        self.bits = clip.format.bits_per_sample
+        self._bits = clip.format.bits_per_sample
         is_float = clip.format.sample_type == vs.FLOAT
-        peak = 1.0 if is_float else (1 << self.bits) - 1
+        peak = 1.0 if is_float else (1 << self._bits) - 1
         hthr = peak if hthr is None else hthr
 
         clip_p = self._preprocess(clip)
@@ -238,7 +238,7 @@ class TEdge(EuclidianDistanceMatrixDetect):
     mode_types = ['h', 'v']
 
 
-class TEdgeTedgemask(EuclidianDistanceMatrixDetect):
+class TEdgeTedgemask(EdgeDetect):
     """(tedgemask.TEdgeMask(threshold=0.0, type=2)) Vapoursynth plugin. 3x3 matrices."""
     def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tedgemask.TEdgeMask(threshold=0, type=2)
@@ -379,7 +379,7 @@ class FreyChen(MatrixEdgeDetect):
         return depth(clip, 32)
 
     def _postprocess(self, clip: vs.VideoNode) -> vs.VideoNode:
-        return depth(clip, self.bits, range=Range.FULL, range_in=Range.FULL)
+        return depth(clip, self._bits, range=Range.FULL, range_in=Range.FULL)
 
     def _merge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
         M = 'x x * y y * + z z * + a a * +'
@@ -389,17 +389,17 @@ class FreyChen(MatrixEdgeDetect):
 
 
 def get_all_edge_detects(clip: vs.VideoNode, **kwargs: Any) -> List[vs.VideoNode]:
-    def _all_subclasses(cls) -> Set[Type[EdgeDetect]]:
+    def _all_subclasses(cls: Type[EdgeDetect]) -> Set[Type[EdgeDetect]]:
         return set(cls.__subclasses__()).union(
             [s for c in cls.__subclasses__() for s in _all_subclasses(c)])
 
     all_subclasses = {
-        s for s in _all_subclasses(EdgeDetect)
+        s for s in _all_subclasses(EdgeDetect)  # type: ignore
         if s.__name__ not in {
             'MatrixEdgeDetect', 'SingleMatrixDetect', 'EuclidianDistanceMatrixDetect', 'MaxDetect'
         }
     }
     return [
-        edge_detect().get_mask(clip, **kwargs).text.Text(edge_detect.__name__)  # type: ignore
+        edge_detect().get_mask(clip, **kwargs).text.Text(edge_detect.__name__)
         for edge_detect in sorted(all_subclasses, key=lambda x: x.__name__)
     ]
