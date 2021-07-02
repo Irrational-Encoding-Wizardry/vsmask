@@ -126,3 +126,6 @@ dmypy.json
 
 # vscode folder
 .vscode
+
+# vspreview folder
+.vspreview
