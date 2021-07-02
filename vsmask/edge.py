@@ -1,7 +1,7 @@
 
 import math
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional, Tuple
+from typing import Any, ClassVar, List, Optional, Sequence, Set, Tuple, Type
 
 import vapoursynth as vs
 from vsutil import Range, depth, join, split
@@ -13,6 +13,7 @@ core = vs.core
 
 class EdgeDetect(ABC):
     """Abstract edge detection interface."""
+    bits: int
 
     def get_mask(self, clip: vs.VideoNode,
                  lthr: float = 0.0, hthr: Optional[float] = None, multi: float = 1.0) -> vs.VideoNode:
@@ -30,17 +31,14 @@ class EdgeDetect(ABC):
         if clip.format is None:
             raise ValueError('get_mask: Variable format not allowed!')
 
-        bits = clip.format.bits_per_sample
+        self.bits = clip.format.bits_per_sample
         is_float = clip.format.sample_type == vs.FLOAT
-        peak = 1.0 if is_float else (1 << bits) - 1
+        peak = 1.0 if is_float else (1 << self.bits) - 1
         hthr = peak if hthr is None else hthr
-
 
         clip_p = self._preprocess(clip)
         mask = self._compute_mask(clip_p)
-
-        mask = depth(mask, bits, range=Range.FULL, range_in=Range.FULL)
-
+        mask = self._postprocess(mask)
 
         if multi != 1:
             mask = pick_px_op(
@@ -49,7 +47,6 @@ class EdgeDetect(ABC):
                 lut=lambda x: round(max(min(x * multi, peak), 0))
             )(mask)
 
-
         if lthr > 0 or hthr < peak:
             mask = pick_px_op(
                 use_expr=is_float,
@@ -57,33 +54,267 @@ class EdgeDetect(ABC):
                 lut=lambda x: peak if x > hthr else 0 if x <= lthr else x
             )(mask)
 
-
         return mask
 
+    @abstractmethod
     def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
-        masks = [clip.std.Convolution(matrix=mat, divisor=div, saturate=False, mode=mode)
-                 for mat, div, mode in zip(self._get_matrices(), self._get_divisors(), self._get_mode_types())]
-
-        expr = self._get_expr()
-        mask = core.std.Expr(masks, expr) if expr else masks[0]
-
-        return mask
-
-    def _get_divisors(self) -> List[float]:
-        return [0.0] * len(self._get_matrices())
-
-    def _get_mode_types(self) -> List[str]:
-        return ['s'] * len(self._get_matrices())
-
-    def _get_expr(self) -> str:
-        return ''
+        raise NotImplementedError
 
     def _preprocess(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip
 
+    def _postprocess(self, clip: vs.VideoNode) -> vs.VideoNode:
+        return clip
+
+
+class MatrixEdgeDetect(EdgeDetect, ABC):
+    matrices: ClassVar[Sequence[Sequence[float]]]
+    divisors: ClassVar[Optional[Sequence[float]]] = None
+    mode_types: ClassVar[Optional[Sequence[str]]] = None
+
+    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        return self._merge([
+            clip.std.Convolution(matrix=mat, divisor=div, saturate=False, mode=mode)
+            for mat, div, mode in zip(self._get_matrices(), self._get_divisors(), self._get_mode_types())
+        ])
+
     @abstractmethod
-    def _get_matrices(self) -> List[List[float]]:
-        pass
+    def _merge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
+        raise NotImplementedError
+
+    def _get_matrices(self) -> Sequence[Sequence[float]]:
+        return self.matrices
+
+    def _get_divisors(self) -> Sequence[float]:
+        return self.divisors if self.divisors else [0.0] * len(self._get_matrices())
+
+    def _get_mode_types(self) -> Sequence[str]:
+        return self.mode_types if self.mode_types else ['s'] * len(self._get_matrices())
+
+
+class SingleMatrixDetect(MatrixEdgeDetect):
+    matrix: ClassVar[Sequence[float]]
+
+    def _get_matrices(self) -> Sequence[Sequence[float]]:
+        return [self.matrix]
+
+    def _merge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
+        return clips[0]
+
+
+class EuclidianDistanceMatrixDetect(MatrixEdgeDetect):
+    def _merge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
+        return core.std.Expr(clips, 'x x * y y * + sqrt')
+
+
+class MaxDetect(MatrixEdgeDetect):
+    def _merge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
+        return core.std.Expr(clips, max_expr(len(clips)))
+
+
+class Laplacian1(SingleMatrixDetect):
+    """Pierre-Simon de Laplace operator 1st implementation. 3x3 matrix."""
+    matrix = [0, -1, 0, -1, 4, -1, 0, -1, 0]
+
+
+class Laplacian2(SingleMatrixDetect):
+    """Pierre-Simon de Laplace operator 2nd implementation. 3x3 matrix."""
+    matrix = [1, -2, 1, -2, 4, -2, 1, -2, 1]
+
+
+class Laplacian3(SingleMatrixDetect):
+    """Pierre-Simon de Laplace operator 3rd implementation. 3x3 matrix."""
+    matrix = [2, -1, 2, -1, -4, -1, 2, -1, 2]
+
+
+class Laplacian4(SingleMatrixDetect):
+    """Pierre-Simon de Laplace operator 4th implementation. 3x3 matrix."""
+    matrix = [-1, -1, -1, -1, 8, -1, -1, -1, -1]
+
+
+class Kayyali(SingleMatrixDetect):
+    """Kayyali operator. 3x3 matrix."""
+    matrix = [6, 0, -6, 0, 0, 0, -6, 0, 6]
+
+
+class ExLaplacian1(SingleMatrixDetect):
+    """Extended Pierre-Simon de Laplace operator 1st implementation. 5x5 matrix."""
+    matrix = [0, 0, -1, 0, 0, 0, 0, -1, 0, 0, -1, -1, 8, -1, -1, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0]
+
+
+class ExLaplacian2(SingleMatrixDetect):
+    """Extended Pierre-Simon de Laplace operator 2nd implementation. 5x5 matrix."""
+    matrix = [0, 1, -1, 1, 0, 1, 1, -4, 1, 1, -1, -4, 8, -4, -1, 1, 1, -4, 1, 1, 0, 1, -1, 1, 0]
+
+
+class ExLaplacian3(SingleMatrixDetect):
+    """Extended Pierre-Simon de Laplace operator 3rd implementation. 5x5 matrix."""
+    matrix = [-1, 1, -1, 1, -1, 1, 2, -4, 2, 1, -1, -4, 8, -4, -1, 1, 2, -4, 2, 1, -1, 1, -1, 1, -1]
+
+
+class ExLaplacian4(SingleMatrixDetect):
+    """Extended Pierre-Simon de Laplace operator 4th implementation. 5x5 matrix."""
+    matrix = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 24, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
+
+
+class LoG(SingleMatrixDetect):
+    """Laplacian of Gaussian. 5x5 matrix."""
+    matrix = [0, 0, -1, 0, 0, 0, -1, -2, -1, 0, -1, -2, 16, -2, -1, 0, -1, -2, -1, 0, 0, 0, -1, 0, 0]
+
+
+class Roberts(EuclidianDistanceMatrixDetect):
+    """Lawrence Roberts operator. 2x2 matrices computed in 3x3 matrices."""
+    matrices = [
+        [0, 0, 0, 0, 1, 0, 0, 0, -1],
+        [0, 1, 0, -1, 0, 0, 0, 0, 0]
+    ]
+
+
+class Prewitt(EuclidianDistanceMatrixDetect):
+    """Judith M. S. Prewitt operator. 3x3 matrices."""
+    matrices = [
+        [1, 0, -1, 1, 0, -1, 1, 0, -1],
+        [1, 1, 1, 0, 0, 0, -1, -1, -1]
+    ]
+
+
+class PrewittStd(EdgeDetect):
+    """Judith M. S. Prewitt Vapoursynth plugin operator. 3x3 matrices."""
+    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        return clip.std.Prewitt()
+
+
+class Sobel(EuclidianDistanceMatrixDetect):
+    """Sobel–Feldman operator. 3x3 matrices."""
+    matrices = [
+        [1, 0, -1, 2, 0, -2, 1, 0, -1],
+        [1, 2, 1, 0, 0, 0, -1, -2, -1]
+    ]
+
+
+class SobelStd(EdgeDetect):
+    """Sobel–Feldman Vapoursynth plugin operator. 3x3 matrices."""
+    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        return clip.std.Sobel()
+
+
+class Scharr(EuclidianDistanceMatrixDetect):
+    """H. Scharr optimized operator. 3x3 matrices."""
+    matrices = [
+        [-3, 0, 3, -10, 0, 10, -3, 0, 3],
+        [-3, -10, -3, 0, 0, 0, 3, 10, 3]
+    ]
+
+
+class ScharrG41(Scharr):
+    """H. Scharr optimized operator. 3x3 matrices from G41Fun."""
+    divisors = [3, 3]
+
+
+class Kroon(EuclidianDistanceMatrixDetect):
+    """Dirk-Jan Kroon operator. 3x3 matrices."""
+    matrices = [
+        [-17, 0, 17, -61, 0, 61, -17, 0, 17],
+        [-17, -61, -17, 0, 0, 0, 17, 61, 17]
+    ]
+
+
+class FreyChenG41(EuclidianDistanceMatrixDetect):
+    """"Chen Frei" operator. 3x3 matrices from G41Fun."""
+    matrices = [
+        [-7, 0, 7, -10, 0, 10, -7, 0, 7],
+        [-7, -10, -7, 0, 0, 0, 7, 10, 7]
+    ]
+    divisors = [7, 7]
+
+
+class TEdge(EuclidianDistanceMatrixDetect):
+    """(TEdgeMasktype=2) Avisynth plugin. 3x3 matrices."""
+    matrices = [
+        [12, -74, 0, 74, -12],
+        [-12, 74, 0, -74, 12]
+    ]
+    divisors = [62, 62]
+    mode_types = ['h', 'v']
+
+
+class TEdgeTedgemask(EuclidianDistanceMatrixDetect):
+    """(tedgemask.TEdgeMask(threshold=0.0, type=2)) Vapoursynth plugin. 3x3 matrices."""
+    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        return clip.tedgemask.TEdgeMask(threshold=0, type=2)
+
+
+class ExPrewitt(EuclidianDistanceMatrixDetect):
+    """Extended Judith M. S. Prewitt operator. 5x5 matrices."""
+    matrices = [
+        [2, 1, 0, -1, -2, 2, 1, 0, -1, -2, 2, 1, 0, -1, -2, 2, 1, 0, -1, -2, 2, 1, 0, -1, -2],
+        [2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -2, -2, -2, -2, -2]
+    ]
+
+
+class ExSobel(EuclidianDistanceMatrixDetect):
+    """Extended Sobel–Feldman operator. 5x5 matrices."""
+    matrices = [
+        [2, 1, 0, -1, -2, 2, 1, 0, -1, -2, 4, 2, 0, -2, -4, 2, 1, 0, -1, -2, 2, 1, 0, -1, -2],
+        [2, 2, 4, 2, 2, 1, 1, 2, 1, 1, 0, 0, 0, 0, 0, -1, -1, -2, -1, -1, -2, -2, -4, -2, -2]
+    ]
+
+
+class FDOG(EuclidianDistanceMatrixDetect):
+    """Flow-based Difference Of Gaussian operator. 3x3 matrices from G41Fun."""
+    matrices = [
+        [1, 1, 0, -1, -1, 2, 2, 0, -2, -2, 3, 3, 0, -3, -3, 2, 2, 0, -2, -2, 1, 1, 0, -1, -1],
+        [1, 2, 3, 2, 1, 1, 2, 3, 2, 1, 0, 0, 0, 0, 0, -1, -2, -3, -2, -1, -1, -2, -3, -2, -1]
+    ]
+    divisors = [2, 2]
+
+
+class Robinson3(MaxDetect):
+    """Robinson compass operator level 3. 3x3 matrices."""
+    matrices = [
+        [1, 1, 1, 0, 0, 0, -1, -1, -1],
+        [1, 1, 0, 1, 0, -1, 0, -1, -1],
+        [1, 0, -1, 1, 0, -1, 1, 0, -1],
+        [0, -1, -1, 1, 0, -1, 1, 1, 0]
+    ]
+
+
+class Robinson5(MaxDetect):
+    """Robinson compass operator level 5. 3x3 matrices."""
+    matrices = [
+        [1, 2, 1, 0, 0, 0, -1, -2, -1],
+        [2, 1, 0, 1, 0, -1, 0, -1, -2],
+        [1, 0, -1, 2, 0, -2, 1, 0, -1],
+        [0, -1, -2, 1, 0, -1, 2, 1, 0]
+    ]
+
+
+class Kirsch(MaxDetect):
+    """Russell Kirsch compass operator. 3x3 matrices."""
+    matrices = [
+        [5, 5, 5, -3, 0, -3, -3, -3, -3],
+        [5, 5, -3, 5, 0, -3, -3, -3, -3],
+        [5, -3, -3, 5, 0, -3, 5, -3, -3],
+        [-3, -3, -3, 5, 0, -3, 5, 5, -3],
+        [-3, -3, -3, -3, 0, -3, 5, 5, 5],
+        [-3, -3, -3, -3, 0, 5, -3, 5, 5],
+        [-3, -3, 5, -3, 0, 5, -3, -3, 5],
+        [-3, 5, 5, -3, 0, 5, -3, -3, -3]
+    ]
+
+
+class ExKirsch(MaxDetect):
+    """Extended Russell Kirsch compass operator. 5x5 matrices."""
+    matrices = [
+        [9, 9, 9, 9, 9, 9, 5, 5, 5, 9, -7, -3, 0, -3, -7, -7, -3, -3, -3, -7, -7, -7, -7, -7, -7],
+        [9, 9, 9, 9, -7, 9, 5, 5, -3, -7, 9, 5, 0, -3, -7, 9, -3, -3, -3, -7, -7, -7, -7, -7, -7],
+        [9, 9, -7, -7, -7, 9, 5, -3, -3, -7, 9, 5, 0, -3, -7, 9, 5, -3, -3, -7, 9, 9, -7, -7, -7],
+        [-7, -7, -7, -7, -7, 9, -3, -3, -3, -7, 9, 5, 0, -3, -7, 9, 5, 5, -3, -7, 9, 9, 9, 9, -7],
+        [-7, -7, -7, -7, -7, -7, -3, -3, -3, -7, -7, -3, 0, -3, -7, 9, 5, 5, 5, 9, 9, 9, 9, 9, 9],
+        [-7, -7, -7, -7, -7, -7, -3, -3, -3, 9, -7, -3, 0, 5, 9, -7, -3, 5, 5, 9, -7, 9, 9, 9, 9],
+        [-7, -7, -7, 9, 9, -7, -3, -3, 5, 9, -7, -3, 0, 5, 9, -7, -3, -3, 5, 9, -7, -7, -7, 9, 9],
+        [-7, 9, 9, 9, 9, -7, -3, 5, 5, 9, -7, -3, 0, 5, 9, -7, -3, -3, -3, 9, -7, -7, -7, -7, -7]
+    ]
 
 
 class MinMax(EdgeDetect):
@@ -117,295 +348,58 @@ class MinMax(EdgeDetect):
         ]
         return planes[0] if len(planes) == 1 else join(planes, clip.format.color_family)
 
-    def _get_matrices(self) -> List[List[float]]:
-        return [[]]
 
-
-
-class Laplacian1(EdgeDetect):
-    """Pierre-Simon de Laplace operator 1st implementation. 3x3 matrix."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[0, -1, 0, -1, 4, -1, 0, -1, 0]]
-
-
-class Laplacian2(EdgeDetect):
-    """Pierre-Simon de Laplace operator 2nd implementation. 3x3 matrix."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[1, -2, 1, -2, 4, -2, 1, -2, 1]]
-
-
-class Laplacian3(EdgeDetect):
-    """Pierre-Simon de Laplace operator 3rd implementation. 3x3 matrix."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[2, -1, 2, -1, -4, -1, 2, -1, 2]]
-
-
-class Laplacian4(EdgeDetect):
-    """Pierre-Simon de Laplace operator 4th implementation. 3x3 matrix."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[-1, -1, -1, -1, 8, -1, -1, -1, -1]]
-
-
-class ExLaplacian1(EdgeDetect):
-    """Extended Pierre-Simon de Laplace operator 1st implementation. 5x5 matrix."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[0, 0, -1, 0, 0, 0, 0, -1, 0, 0, -1, -1, 8, -1, -1, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0]]
-
-
-class ExLaplacian2(EdgeDetect):
-    """Extended Pierre-Simon de Laplace operator 2nd implementation. 5x5 matrix."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[0, 1, -1, 1, 0, 1, 1, -4, 1, 1, -1, -4, 8, -4, -1, 1, 1, -4, 1, 1, 0, 1, -1, 1, 0]]
-
-
-class ExLaplacian3(EdgeDetect):
-    """Extended Pierre-Simon de Laplace operator 3rd implementation. 5x5 matrix."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[-1, 1, -1, 1, -1, 1, 2, -4, 2, 1, -1, -4, 8, -4, -1, 1, 2, -4, 2, 1, -1, 1, -1, 1, -1]]
-
-
-class ExLaplacian4(EdgeDetect):
-    """Extended Pierre-Simon de Laplace operator 4th implementation. 5x5 matrix."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 24, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]]
-
-
-class Kayyali(EdgeDetect):
-    """Kayyali operator. 3x3 matrix."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[6, 0, -6, 0, 0, 0, -6, 0, 6]]
-
-
-class LoG(EdgeDetect):
-    """Laplacian of Gaussian. 5x5 matrix."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[0, 0, -1, 0, 0, 0, -1, -2, -1, 0, -1, -2, 16, -2, -1, 0, -1, -2, -1, 0, 0, 0, -1, 0, 0]]
-
-
-class Roberts(EdgeDetect):
-    """Lawrence Roberts operator. 2x2 matrices computed in 3x3 matrices."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[0, 0, 0, 0, 1, 0, 0, 0, -1],
-                [0, 1, 0, -1, 0, 0, 0, 0, 0]]
-
-    def _get_expr(self) -> str:
-        return 'x x * y y * + sqrt'
-
-
-class Prewitt(EdgeDetect):
-    """Judith M. S. Prewitt operator. 3x3 matrices."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[1, 0, -1, 1, 0, -1, 1, 0, -1],
-                [1, 1, 1, 0, 0, 0, -1, -1, -1]]
-
-    def _get_expr(self) -> str:
-        return 'x x * y y * + sqrt'
-
-
-class PrewittStd(EdgeDetect):
-    """Judith M. S. Prewitt Vapoursynth plugin operator. 3x3 matrices."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[]]
-
-    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
-        return core.std.Prewitt(clip)
-
-
-class ExPrewitt(EdgeDetect):
-    """Extended Judith M. S. Prewitt operator. 5x5 matrices."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[2, 1, 0, -1, -2, 2, 1, 0, -1, -2, 2, 1, 0, -1, -2, 2, 1, 0, -1, -2, 2, 1, 0, -1, -2],
-                [2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -2, -2, -2, -2, -2]]
-
-    def _get_expr(self) -> str:
-        return 'x x * y y * + sqrt'
-
-
-class Sobel(EdgeDetect):
-    """Sobel–Feldman operator. 3x3 matrices."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[1, 0, -1, 2, 0, -2, 1, 0, -1],
-                [1, 2, 1, 0, 0, 0, -1, -2, -1]]
-
-    def _get_expr(self) -> str:
-        return 'x x * y y * + sqrt'
-
-
-class SobelStd(EdgeDetect):
-    """Sobel–Feldman Vapoursynth plugin operator. 3x3 matrices."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[]]
-
-    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
-        return core.std.Sobel(clip)
-
-
-class ExSobel(EdgeDetect):
-    """Extended Sobel–Feldman operator. 5x5 matrices."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[2, 1, 0, -1, -2, 2, 1, 0, -1, -2, 4, 2, 0, -2, -4, 2, 1, 0, -1, -2, 2, 1, 0, -1, -2],
-                [2, 2, 4, 2, 2, 1, 1, 2, 1, 1, 0, 0, 0, 0, 0, -1, -1, -2, -1, -1, -2, -2, -4, -2, -2]]
-
-    def _get_expr(self) -> str:
-        return 'x x * y y * + sqrt'
-
-
-class Scharr(EdgeDetect):
-    """H. Scharr optimized operator. 3x3 matrices."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[-3, 0, 3, -10, 0, 10, -3, 0, 3],
-                [-3, -10, -3, 0, 0, 0, 3, 10, 3]]
-
-    def _get_expr(self) -> str:
-        return 'x x * y y * + sqrt'
-
-
-class FDOG(EdgeDetect):
-    """Flow-based Difference Of Gaussian operator. 3x3 matrices from G41Fun."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[1, 1, 0, -1, -1, 2, 2, 0, -2, -2, 3, 3, 0, -3, -3, 2, 2, 0, -2, -2, 1, 1, 0, -1, -1],
-                [1, 2, 3, 2, 1, 1, 2, 3, 2, 1, 0, 0, 0, 0, 0, -1, -2, -3, -2, -1, -1, -2, -3, -2, -1]]
-
-    def _get_divisors(self) -> List[float]:
-        return [2, 2]
-
-    def _get_expr(self) -> str:
-        return 'x x * y y * + sqrt'
-
-
-class Kroon(EdgeDetect):
-    """Dirk-Jan Kroon operator. 3x3 matrices."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[-17, 0, 17, -61, 0, 61, -17, 0, 17],
-                [-17, -61, -17, 0, 0, 0, 17, 61, 17]]
-
-    def _get_expr(self) -> str:
-        return 'x x * y y * + sqrt'
-
-
-class FreyChen(EdgeDetect):
+class FreyChen(MatrixEdgeDetect):
     """Chen Frei operator. 3x3 matrices properly implemented."""
-    def _get_matrices(self) -> List[List[float]]:
-        sqrt2 = math.sqrt(2)
-        return [[1, sqrt2, 1, 0, 0, 0, -1, -sqrt2, -1],
-                [1, 0, -1, sqrt2, 0, -sqrt2, 1, 0, -1],
-                [0, -1, sqrt2, 1, 0, -1, -sqrt2, 1, 0],
-                [sqrt2, -1, 0, -1, 0, 1, 0, 1, -sqrt2],
-                [0, 1, 0, -1, 0, -1, 0, 1, 0],
-                [-1, 0, 1, 0, 0, 0, 1, 0, -1],
-                [1, -2, 1, -2, 4, -2, 1, -2, 1],
-                [-2, 1, -2, 1, 4, 1, -2, 1, -2],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1]]
-
-    def _get_divisors(self) -> List[float]:
-        sqrt2 = math.sqrt(2)
-        return [2 * sqrt2, 2 * sqrt2, 2 * sqrt2, 2 * sqrt2, 2, 2, 6, 6, 3]
-
-    def _get_expr(self) -> str:
-        M = 'x x * y y * + z z * + a a * +'
-        S = f'b b * c c * + d d * + e e * + f f * + {M} +'
-        return f'{M} {S} / sqrt'
+    sqrt2 = math.sqrt(2)
+    matrices = [
+        [1, sqrt2, 1, 0, 0, 0, -1, -sqrt2, -1],
+        [1, 0, -1, sqrt2, 0, -sqrt2, 1, 0, -1],
+        [0, -1, sqrt2, 1, 0, -1, -sqrt2, 1, 0],
+        [sqrt2, -1, 0, -1, 0, 1, 0, 1, -sqrt2],
+        [0, 1, 0, -1, 0, -1, 0, 1, 0],
+        [-1, 0, 1, 0, 0, 0, 1, 0, -1],
+        [1, -2, 1, -2, 4, -2, 1, -2, 1],
+        [-2, 1, -2, 1, 4, 1, -2, 1, -2],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1]
+    ]
+    divisors = [
+        2 * sqrt2,
+        2 * sqrt2,
+        2 * sqrt2,
+        2 * sqrt2,
+        2,
+        2,
+        6,
+        6,
+        3
+    ]
 
     def _preprocess(self, clip: vs.VideoNode) -> vs.VideoNode:
         return depth(clip, 32)
 
+    def _postprocess(self, clip: vs.VideoNode) -> vs.VideoNode:
+        return depth(clip, self.bits, range=Range.FULL, range_in=Range.FULL)
 
-class FreyChenG41(EdgeDetect):
-    """"Chen Frei" operator. 3x3 matrices from G41Fun."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[-7, 0, 7, -10, 0, 10, -7, 0, 7],
-                [-7, -10, -7, 0, 0, 0, 7, 10, 7]]
+    def _merge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
+        M = 'x x * y y * + z z * + a a * +'
+        S = f'b b * c c * + d d * + e e * + f f * + {M} +'
+        return core.std.Expr(clips, f'{M} {S} / sqrt')
 
-    def _get_divisors(self) -> List[float]:
-        return [7, 7]
-
-    def _get_expr(self) -> str:
-        return 'x x * y y * + sqrt'
-
-
-class TEdge(EdgeDetect):
-    """(TEdgeMasktype=2) Avisynth plugin. 3x3 matrices."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[12, -74, 0, 74, -12],
-                [-12, 74, 0, -74, 12]]
-
-    def _get_divisors(self) -> List[float]:
-        return [62, 62]
-
-    def _get_mode_types(self) -> List[str]:
-        return ['h', 'v']
-
-    def _get_expr(self) -> str:
-        return 'x x * y y * + sqrt'
-
-
-class TEdgeTedgemask(EdgeDetect):
-    """(tedgemask.TEdgeMask(threshold=0.0, type=2)) Vapoursynth plugin. 3x3 matrices."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[]]
-
-    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
-        return core.tedgemask.TEdgeMask(clip, threshold=0, type=2)
-
-
-class Robinson3(EdgeDetect):
-    """Robinson compass operator level 3. 3x3 matrices."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[1, 1, 1, 0, 0, 0, -1, -1, -1],
-                [1, 1, 0, 1, 0, -1, 0, -1, -1],
-                [1, 0, -1, 1, 0, -1, 1, 0, -1],
-                [0, -1, -1, 1, 0, -1, 1, 1, 0]]
-
-    def _get_expr(self) -> str:
-        return max_expr(4)
-
-
-class Robinson5(EdgeDetect):
-    """Robinson compass operator level 5. 3x3 matrices."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[1, 2, 1, 0, 0, 0, -1, -2, -1],
-                [2, 1, 0, 1, 0, -1, 0, -1, -2],
-                [1, 0, -1, 2, 0, -2, 1, 0, -1],
-                [0, -1, -2, 1, 0, -1, 2, 1, 0]]
-
-    def _get_expr(self) -> str:
-        return max_expr(4)
-
-
-class Kirsch(EdgeDetect):
-    """Russell Kirsch compass operator. 3x3 matrices."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[5, 5, 5, -3, 0, -3, -3, -3, -3],
-                [5, 5, -3, 5, 0, -3, -3, -3, -3],
-                [5, -3, -3, 5, 0, -3, 5, -3, -3],
-                [-3, -3, -3, 5, 0, -3, 5, 5, -3],
-                [-3, -3, -3, -3, 0, -3, 5, 5, 5],
-                [-3, -3, -3, -3, 0, 5, -3, 5, 5],
-                [-3, -3, 5, -3, 0, 5, -3, -3, 5],
-                [-3, 5, 5, -3, 0, 5, -3, -3, -3]]
-
-    def _get_expr(self) -> str:
-        return max_expr(8)
-
-
-class ExKirsch(EdgeDetect):
-    """Extended Russell Kirsch compass operator. 5x5 matrices."""
-    def _get_matrices(self) -> List[List[float]]:
-        return [[9, 9, 9, 9, 9, 9, 5, 5, 5, 9, -7, -3, 0, -3, -7, -7, -3, -3, -3, -7, -7, -7, -7, -7, -7],
-                [9, 9, 9, 9, -7, 9, 5, 5, -3, -7, 9, 5, 0, -3, -7, 9, -3, -3, -3, -7, -7, -7, -7, -7, -7],
-                [9, 9, -7, -7, -7, 9, 5, -3, -3, -7, 9, 5, 0, -3, -7, 9, 5, -3, -3, -7, 9, 9, -7, -7, -7],
-                [-7, -7, -7, -7, -7, 9, -3, -3, -3, -7, 9, 5, 0, -3, -7, 9, 5, 5, -3, -7, 9, 9, 9, 9, -7],
-                [-7, -7, -7, -7, -7, -7, -3, -3, -3, -7, -7, -3, 0, -3, -7, 9, 5, 5, 5, 9, 9, 9, 9, 9, 9],
-                [-7, -7, -7, -7, -7, -7, -3, -3, -3, 9, -7, -3, 0, 5, 9, -7, -3, 5, 5, 9, -7, 9, 9, 9, 9],
-                [-7, -7, -7, 9, 9, -7, -3, -3, 5, 9, -7, -3, 0, 5, 9, -7, -3, -3, 5, 9, -7, -7, -7, 9, 9],
-                [-7, 9, 9, 9, 9, -7, -3, 5, 5, 9, -7, -3, 0, 5, 9, -7, -3, -3, -3, 9, -7, -7, -7, -7, -7]]
-
-    def _get_expr(self) -> str:
-        return max_expr(8)
 
 
 def get_all_edge_detects(clip: vs.VideoNode, **kwargs: Any) -> List[vs.VideoNode]:
+    def _all_subclasses(cls) -> Set[Type[EdgeDetect]]:
+        return set(cls.__subclasses__()).union(
+            [s for c in cls.__subclasses__() for s in _all_subclasses(c)])
+
+    all_subclasses = {
+        s for s in _all_subclasses(EdgeDetect)
+        if s.__name__ not in {
+            'MatrixEdgeDetect', 'SingleMatrixDetect', 'EuclidianDistanceMatrixDetect', 'MaxDetect'
+        }
+    }
     return [
         edge_detect().get_mask(clip, **kwargs).text.Text(edge_detect.__name__)  # type: ignore
-        for edge_detect in EdgeDetect.__subclasses__()
+        for edge_detect in sorted(all_subclasses, key=lambda x: x.__name__)
     ]

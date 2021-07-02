@@ -1,8 +1,9 @@
 
 from functools import partial
-from typing import Any, Callable, List, Sequence, Union
+from typing import Any, Callable, Sequence, Union
 
 import vapoursynth as vs
+from vsutil import EXPR_VARS
 
 core = vs.core
 
@@ -43,15 +44,6 @@ def pick_px_op(
     return func
 
 
-def load_operators_expr() -> List[str]:
-    """
-    Returns clip loads operators for std.Expr as a list of string
-    """
-    ascii_lowercase = 'abcdefghijklmnopqrstuvwxyz'
-    abcd = list(ascii_lowercase)
-    return abcd[-3:] + abcd[:-3]
-
-
 def max_expr(n: int) -> str:
     """
     Dynamic variable max string to be integrated in std.Expr.
@@ -59,6 +51,6 @@ def max_expr(n: int) -> str:
     :param n:           Number of elements.
     :return:            Expression
     """
-    return 'x y max ' + ' max '.join(
-        load_operators_expr()[i] for i in range(2, n)
-    ) + ' max'
+    names = ' '.join(EXPR_VARS[:n])
+    maxes = 'max ' * (n-1)
+    return f'{names} {maxes}'[:-1]
