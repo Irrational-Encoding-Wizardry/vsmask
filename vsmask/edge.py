@@ -15,7 +15,8 @@ class EdgeDetect(ABC):
     """Abstract edge detection interface."""
     _bits: int
 
-    def get_mask(self, clip: vs.VideoNode,
+    @classmethod
+    def get_mask(cls, clip: vs.VideoNode,
                  lthr: float = 0.0, hthr: Optional[float] = None, multi: float = 1.0) -> vs.VideoNode:
         """
         Makes edge mask based on convolution kernel.
@@ -28,17 +29,19 @@ class EdgeDetect(ABC):
 
         :return:                Mask clip
         """
+        edge_detect = cls()
+
         if clip.format is None:
             raise ValueError('get_mask: Variable format not allowed!')
 
-        self._bits = clip.format.bits_per_sample
+        edge_detect._bits = clip.format.bits_per_sample
         is_float = clip.format.sample_type == vs.FLOAT
-        peak = 1.0 if is_float else (1 << self._bits) - 1
+        peak = 1.0 if is_float else (1 << edge_detect._bits) - 1
         hthr = peak if hthr is None else hthr
 
-        clip_p = self._preprocess(clip)
-        mask = self._compute_mask(clip_p)
-        mask = self._postprocess(mask)
+        clip_p = edge_detect._preprocess(clip)
+        mask = edge_detect._compute_mask(clip_p)
+        mask = edge_detect._postprocess(mask)
 
         if multi != 1:
             mask = pick_px_op(
