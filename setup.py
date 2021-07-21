@@ -1,4 +1,4 @@
-import setuptools
+from setuptools import setup
 
 with open("README.md") as fh:
     long_description = fh.read()
@@ -7,10 +7,9 @@ with open("requirements.txt") as fh:
     install_requires = fh.read()
 
 NAME = "vs-mask"
-
 RELEASE = "0.0.0"
 
-setuptools.setup(
+setup(
     name=NAME,
     version=RELEASE,
     author="",
@@ -29,5 +28,6 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    zip_safe=False,
     python_requires='>=3.9',
 )
