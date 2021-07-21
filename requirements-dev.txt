@@ -6,4 +6,4 @@ pyflakes==2.3.1
 typed-ast==1.4.3
 typing-extensions==3.10.0.0
 VapourSynth>=51
-git+https://github.com/Irrational-Encoding-Wizardry/vsutil.git@40a2681#egg=vsutil
+vsutil>=0.6.0
