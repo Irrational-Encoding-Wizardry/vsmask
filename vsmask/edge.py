@@ -175,6 +175,20 @@ class Roberts(EuclidianDistanceMatrixDetect):
     ]
 
 
+class TriticalTCanny(EdgeDetect):
+    """Operator used in Tritical's original TCanny filter"""
+    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        return clip.tcanny.TCanny(0, mode=1, op=0)
+
+
+class Tritical(EuclidianDistanceMatrixDetect):
+    """Operator used in Tritical's original TCanny filter"""
+    matrices = [
+        [0, 0, 0, -1, 0, 1, 0, 0, 0],
+        [0, 1, 0, 0, 0, 0, 0, -1, 0]
+    ]
+
+
 class Prewitt(EuclidianDistanceMatrixDetect):
     """Judith M. S. Prewitt operator. 3x3 matrices."""
     matrices = [
@@ -187,6 +201,12 @@ class PrewittStd(EdgeDetect):
     """Judith M. S. Prewitt Vapoursynth plugin operator. 3x3 matrices."""
     def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.std.Prewitt()
+
+
+class PrewittTCanny(EdgeDetect):
+    """Judith M. S. Prewitt TCanny plugin operator. 3x3 matrices."""
+    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        return clip.tcanny.TCanny(0, mode=1, op=1, scale=2)
 
 
 class Sobel(EuclidianDistanceMatrixDetect):
@@ -216,12 +236,24 @@ class ScharrG41(Scharr):
     divisors = [3, 3]
 
 
+class ScharrTCanny(EdgeDetect):
+    """H. Scharr optimized TCanny Vapoursynth plugin operator. 3x3 matrices."""
+    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        return clip.tcanny.TCanny(0, mode=1, op=2, scale=4.07)
+
+
 class Kroon(EuclidianDistanceMatrixDetect):
     """Dirk-Jan Kroon operator. 3x3 matrices."""
     matrices = [
         [-17, 0, 17, -61, 0, 61, -17, 0, 17],
         [-17, -61, -17, 0, 0, 0, 17, 61, 17]
     ]
+
+
+class KroonTCanny(EdgeDetect):
+    """Dirk-Jan Kroon TCanny Vapoursynth plugin operator. 3x3 matrices."""
+    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        return clip.tcanny.TCanny(0, mode=1, op=4)
 
 
 class FreyChenG41(EuclidianDistanceMatrixDetect):
@@ -274,6 +306,12 @@ class FDOG(EuclidianDistanceMatrixDetect):
     divisors = [2, 2]
 
 
+class FDOGTCanny(EdgeDetect):
+    """Flow-based Difference Of Gaussian TCanny Vapoursynth plugin operator. 3x3 matrices."""
+    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        return clip.tcanny.TCanny(0, mode=1, op=6, scale=0.5)
+
+
 class Robinson3(MaxDetect):
     """Robinson compass operator level 3. 3x3 matrices."""
     matrices = [
@@ -317,6 +355,12 @@ class Kirsch(MaxDetect):
         [-3, -3, 5, -3, 0, 5, -3, -3, 5],
         [-3, 5, 5, -3, 0, 5, -3, -3, -3]
     ]
+
+
+class KirschTCanny(EdgeDetect):
+    """Russell Kirsch compass TCanny Vapoursynth plugin operator. 3x3 matrices."""
+    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        return clip.tcanny.TCanny(0, mode=1, op=5)
 
 
 class ExKirsch(MaxDetect):
