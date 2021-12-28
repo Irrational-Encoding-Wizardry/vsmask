@@ -1,2 +1,3 @@
-VapourSynth>=51
+VapourSynth>=57
 vsutil>=0.6.0
+git+git://github.com/Irrational-Encoding-Wizardry/lvsfunc.git@v0.3.10#egg=lvsfunc
