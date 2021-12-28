@@ -6,7 +6,7 @@ from typing import Any, ClassVar, List, Optional, Sequence, Set, Tuple, Type
 import vapoursynth as vs
 from vsutil import Range, depth, join, split
 
-from .util import max_expr, pick_px_op
+from .util import XxpandMode, expand, inpand, max_expr, pick_px_op
 
 core = vs.core
 
@@ -387,23 +387,11 @@ class MinMax(EdgeDetect):
 
     def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         assert clip.format
-
-        def _minmax(clip: vs.VideoNode, iterations: int) -> Tuple[vs.VideoNode, vs.VideoNode]:
-            def _getcoord(i: int) -> List[int]:
-                return [0, 1, 0, 1, 1, 0, 1, 0] if (i % 3) != 1 else [1] * 8
-
-            clip_max = clip
-            for i in range(1, iterations + 1):
-                clip_max = clip_max.std.Maximum(coordinates=_getcoord(i))
-
-            clip_min = clip
-            for i in range(1, iterations + 1):
-                clip_min = clip_min.std.Minimum(coordinates=_getcoord(i))
-
-            return clip_max, clip_min
-
         planes = [
-            core.std.Expr(_minmax(p, rad), 'x y -')
+            core.std.Expr(
+                [expand(p, rad, rad, XxpandMode.ELLIPSE),
+                 inpand(p, rad, rad, XxpandMode.ELLIPSE)],
+                'x y -')
             for p, rad in zip(split(clip), self.radii)
         ]
         return planes[0] if len(planes) == 1 else join(planes, clip.format.color_family)
