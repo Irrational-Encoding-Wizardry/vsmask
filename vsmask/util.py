@@ -2,11 +2,16 @@ from __future__ import annotations
 
 from enum import Enum, auto
 from functools import partial
-from itertools import zip_longest
-from typing import Any, Callable, Optional, Protocol, Sequence, Union
+from itertools import zip_longest, islice
+from typing import Any, Callable, List, Optional, Sequence, Union
 
 import vapoursynth as vs
+# TODO: put kernels to vsutil
+from lvsfunc.kernels import Kernel
 from vsutil import EXPR_VARS
+
+from .better_vsutil import split
+from .types import MorphoFunc, ZResizer
 
 core = vs.core
 
@@ -143,4 +148,42 @@ def inpand(clip: vs.VideoNode, sw: int, sh: Optional[int] = None, mode: XxpandMo
     return morpho_transfo(clip, core.std.Minimum, sw, sh, mode, thr, planes)
 
 
-# def max_planes(*clips: vs.VideoNode, resizer)
+def max_planes(*clips: vs.VideoNode, resizer: ZResizer | Kernel = core.resize.Bilinear) -> vs.VideoNode:
+    """
+    Set max value of all the planes of all the clips
+    Output clip format is a GRAY clip with the same bitdepth as the first clip
+
+    :param clips:       Source clips.
+    :param resizer:     Resizer used for converting the clips to the same width, height and to 444.
+    :return:            Maxed clip
+    """
+    width, height, format_target = clips[0].width, clips[0].height, clips[0].format
+
+    if format_target is None:
+        raise ValueError('max_planes: Variable format not allowed!')
+
+    format_target = format_target.replace(subsampling_w=0, subsampling_h=0)
+
+    planes: List[vs.VideoNode] = []
+    for clip in clips:
+        if isinstance(resizer, Kernel):
+            resizer.kwargs.update(format=format_target.id)
+            upscale = resizer.scale(clip, width, height)
+        else:
+            upscale = resizer(clip, width, height, format_target.id)
+        planes.extend(split(upscale))
+
+    def _max_clips(p: Sequence[vs.VideoNode]) -> vs.VideoNode:
+        return core.std.Expr(p, max_expr(len(p)))
+
+    def _recursive_max(p: List[vs.VideoNode]) -> vs.VideoNode:
+        if len(p) < 27:
+            return _max_clips(p)
+
+        p_iter = iter(p)
+        return _recursive_max([
+            _max_clips(chunked)
+            for chunked in iter(lambda: tuple(islice(p_iter, 26)), ())
+        ])
+
+    return _recursive_max(planes)
