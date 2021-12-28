@@ -1,13 +1,13 @@
 
 import math
 from abc import ABC, abstractmethod
-from typing import Any, ClassVar, List, Optional, Sequence, Set, Tuple, Type
+from typing import ClassVar, List, Optional, Sequence, Set, Tuple, Type
 
 import vapoursynth as vs
 from vsutil import Range, depth
 
 from .better_vsutil import join, split
-from .util import XxpandMode, expand, inpand, max_expr, pick_px_op
+from .util import XxpandMode, _pick_px_op, expand, inpand, max_expr
 
 core = vs.core
 
@@ -45,14 +45,14 @@ class EdgeDetect(ABC):
         mask = edge_detect._postprocess(mask)
 
         if multi != 1:
-            mask = pick_px_op(
+            mask = _pick_px_op(
                 use_expr=is_float,
                 expr=f'x {multi} *',
                 lut=lambda x: round(max(min(x * multi, peak), 0))
             )(mask)
 
         if lthr > 0 or hthr < peak:
-            mask = pick_px_op(
+            mask = _pick_px_op(
                 use_expr=is_float,
                 expr=f'x {hthr} > {peak} x {lthr} <= 0 x ? ?',
                 lut=lambda x: peak if x > hthr else 0 if x <= lthr else x
@@ -103,12 +103,12 @@ class MatrixEdgeDetect(EdgeDetect, ABC):
         return clip
 
 
-class SingleMatrixDetect(MatrixEdgeDetect):
+class SingleMatrixDetect(MatrixEdgeDetect, ABC):
     def _merge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
         return clips[0]
 
 
-class EuclidianDistanceMatrixDetect(MatrixEdgeDetect):
+class EuclidianDistanceMatrixDetect(MatrixEdgeDetect, ABC):
     def _merge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
         return core.std.Expr(clips, 'x x * y y * + sqrt')
 
@@ -383,6 +383,10 @@ class MinMax(EdgeDetect):
     radii: Tuple[int, int, int]
 
     def __init__(self, rady: int = 2, radc: int = 0) -> None:
+        """
+        :param rady:    Luma radius
+        :param radc:    Chroma radius
+        """
         super().__init__()
         self.radii = (rady, radc, radc)
 
@@ -437,7 +441,17 @@ class FreyChen(MatrixEdgeDetect):
 
 
 
-def get_all_edge_detects(clip: vs.VideoNode, **kwargs: Any) -> List[vs.VideoNode]:
+def get_all_edge_detects(clip: vs.VideoNode, lthr: float = 0.0, hthr: Optional[float] = None,
+                         multi: float = 1.0) -> List[vs.VideoNode]:
+    """
+    Returns all the EdgeDetect subclasses
+
+    :param clip:        Source clip
+    :param lthr:        See :py:func:`EdgeDetect.get_mask`
+    :param hthr:        See :py:func:`EdgeDetect.get_mask`
+    :param multi:       See :py:func:`EdgeDetect.get_mask`
+    :return:            A list edge masks
+    """
     def _all_subclasses(cls: Type[EdgeDetect]) -> Set[Type[EdgeDetect]]:
         return set(cls.__subclasses__()).union(
             [s for c in cls.__subclasses__() for s in _all_subclasses(c)])
@@ -449,6 +463,6 @@ def get_all_edge_detects(clip: vs.VideoNode, **kwargs: Any) -> List[vs.VideoNode
         }
     }
     return [
-        edge_detect().get_mask(clip, **kwargs).text.Text(edge_detect.__name__)  # type: ignore
+        edge_detect().get_mask(clip, lthr, hthr, multi).text.Text(edge_detect.__name__)  # type: ignore
         for edge_detect in sorted(all_subclasses, key=lambda x: x.__name__)
     ]

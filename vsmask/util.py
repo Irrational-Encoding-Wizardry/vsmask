@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from enum import Enum, auto
+from enum import Enum
 from functools import partial
 from itertools import islice, zip_longest
 from typing import Any, Callable, List, Optional, Sequence, Union
@@ -14,7 +14,7 @@ from .types import MorphoFunc, ZResizer
 core = vs.core
 
 
-def pick_px_op(
+def _pick_px_op(
     use_expr: bool,
     expr: str,
     lut: Union[int, float, Sequence[int], Sequence[float], Callable[..., Any]],
@@ -62,9 +62,15 @@ def max_expr(n: int) -> str:
 
 class XxpandMode(Enum):
     """Expand/inpand mode"""
-    RECTANGLE = auto()
-    ELLIPSE = auto()
-    LOSANGE = auto()
+    RECTANGLE = object()
+    """Rectangular shape"""
+    ELLIPSE = object()
+    """Elliptical shape"""
+    LOSANGE = object()
+    """Diamond shape"""
+
+    def __repr__(self) -> str:
+        return '<%s.%s>' % (self.__class__.__name__, self.name)
 
 
 def morpho_transfo(clip: vs.VideoNode, func: MorphoFunc, sw: int, sh: Optional[int] = None,
@@ -150,6 +156,7 @@ def inpand(clip: vs.VideoNode, sw: int, sh: Optional[int] = None, mode: XxpandMo
 def max_planes(*clips: vs.VideoNode, resizer: ZResizer = core.resize.Bilinear) -> vs.VideoNode:
     """
     Set max value of all the planes of all the clips
+
     Output clip format is a GRAY clip with the same bitdepth as the first clip
 
     :param clips:       Source clips.
