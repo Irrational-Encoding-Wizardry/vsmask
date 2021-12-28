@@ -54,9 +54,7 @@ def max_expr(n: int) -> str:
     :param n:           Number of elements.
     :return:            Expression
     """
-    names = ' '.join(EXPR_VARS[:n])
-    maxes = 'max ' * (n-1)
-    return f'{names} {maxes}'[:-1]
+    return ' '.join(var for var in EXPR_VARS[:n]) + ' max' * (n - 1)
 
 
 class XxpandMode(Enum):
@@ -66,13 +64,7 @@ class XxpandMode(Enum):
     LOSANGE = auto()
 
 
-class _MorphoFunc(Protocol):
-    def __call__(self, clip: vs.VideoNode, planes: int | Sequence[int] | None = ...,
-                 threshold: Optional[int] = ..., coordinates: int | Sequence[int] | None = ...) -> vs.VideoNode:
-        ...
-
-
-def morpho_transfo(clip: vs.VideoNode, func: _MorphoFunc, sw: int, sh: Optional[int] = None,
+def morpho_transfo(clip: vs.VideoNode, func: MorphoFunc, sw: int, sh: Optional[int] = None,
                    mode: XxpandMode = XxpandMode.RECTANGLE, thr: Optional[int] = None,
                    planes: int | Sequence[int] | None = None) -> vs.VideoNode:
     """
