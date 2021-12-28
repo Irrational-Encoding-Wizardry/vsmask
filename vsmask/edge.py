@@ -4,8 +4,9 @@ from abc import ABC, abstractmethod
 from typing import Any, ClassVar, List, Optional, Sequence, Set, Tuple, Type
 
 import vapoursynth as vs
-from vsutil import Range, depth, join, split
+from vsutil import Range, depth
 
+from .better_vsutil import join, split
 from .util import XxpandMode, expand, inpand, max_expr, pick_px_op
 
 core = vs.core
@@ -394,7 +395,7 @@ class MinMax(EdgeDetect):
                 'x y -')
             for p, rad in zip(split(clip), self.radii)
         ]
-        return planes[0] if len(planes) == 1 else join(planes, clip.format.color_family)
+        return join(planes, clip.format.color_family)
 
 
 class FreyChen(MatrixEdgeDetect):
