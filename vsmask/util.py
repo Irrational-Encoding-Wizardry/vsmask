@@ -2,12 +2,10 @@ from __future__ import annotations
 
 from enum import Enum, auto
 from functools import partial
-from itertools import zip_longest, islice
+from itertools import islice, zip_longest
 from typing import Any, Callable, List, Optional, Sequence, Union
 
 import vapoursynth as vs
-# TODO: put kernels to vsutil
-from lvsfunc.kernels import Kernel
 from vsutil import EXPR_VARS
 
 from .better_vsutil import split
@@ -148,7 +146,8 @@ def inpand(clip: vs.VideoNode, sw: int, sh: Optional[int] = None, mode: XxpandMo
     return morpho_transfo(clip, core.std.Minimum, sw, sh, mode, thr, planes)
 
 
-def max_planes(*clips: vs.VideoNode, resizer: ZResizer | Kernel = core.resize.Bilinear) -> vs.VideoNode:
+# def max_planes(*clips: vs.VideoNode, resizer: ZResizer | Kernel = core.resize.Bilinear) -> vs.VideoNode:
+def max_planes(*clips: vs.VideoNode, resizer: ZResizer = core.resize.Bilinear) -> vs.VideoNode:
     """
     Set max value of all the planes of all the clips
     Output clip format is a GRAY clip with the same bitdepth as the first clip
@@ -166,12 +165,12 @@ def max_planes(*clips: vs.VideoNode, resizer: ZResizer | Kernel = core.resize.Bi
 
     planes: List[vs.VideoNode] = []
     for clip in clips:
-        if isinstance(resizer, Kernel):
-            resizer.kwargs.update(format=format_target.id)
-            upscale = resizer.scale(clip, width, height)
-        else:
-            upscale = resizer(clip, width, height, format_target.id)
-        planes.extend(split(upscale))
+        # if isinstance(resizer, Kernel):
+        #     resizer.kwargs.update(format=format_target.id)
+        #     upscale = resizer.scale(clip, width, height)
+        # else:
+        #     upscale = resizer(clip, width, height, format_target.id)
+        planes.extend(split(resizer(clip, width, height, format_target.id)))
 
     def _max_clips(p: Sequence[vs.VideoNode]) -> vs.VideoNode:
         return core.std.Expr(p, max_expr(len(p)))
