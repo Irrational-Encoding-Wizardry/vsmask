@@ -6,10 +6,10 @@ from itertools import islice, zip_longest
 from typing import Any, Callable, List, Optional, Sequence, Union
 
 import vapoursynth as vs
-from vsutil import EXPR_VARS
+from vsutil import EXPR_VARS, disallow_variable_format
 
 from .better_vsutil import split
-from .types import MorphoFunc, ZResizer
+from .types import MorphoFunc, ZResizer, ensure_format
 
 core = vs.core
 
@@ -153,6 +153,7 @@ def inpand(clip: vs.VideoNode, sw: int, sh: Optional[int] = None, mode: XxpandMo
 
 
 # def max_planes(*clips: vs.VideoNode, resizer: ZResizer | Kernel = core.resize.Bilinear) -> vs.VideoNode:
+@disallow_variable_format
 def max_planes(*clips: vs.VideoNode, resizer: ZResizer = core.resize.Bilinear) -> vs.VideoNode:
     """
     Set max value of all the planes of all the clips
@@ -163,10 +164,8 @@ def max_planes(*clips: vs.VideoNode, resizer: ZResizer = core.resize.Bilinear) -
     :param resizer:     Resizer used for converting the clips to the same width, height and to 444.
     :return:            Maxed clip
     """
-    width, height, format_target = clips[0].width, clips[0].height, clips[0].format
-
-    if format_target is None:
-        raise ValueError('max_planes: Variable format not allowed!')
+    model = ensure_format(clips[0])
+    width, height, format_target = model.width, model.height, model.format
 
     format_target = format_target.replace(subsampling_w=0, subsampling_h=0)
 
