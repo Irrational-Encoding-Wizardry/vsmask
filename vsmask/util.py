@@ -193,3 +193,56 @@ def max_planes(*clips: vs.VideoNode, resizer: ZResizer = core.resize.Bilinear) -
         ])
 
     return _recursive_max(planes)
+
+
+def region_mask(clip: vs.VideoNode, left: int = 0, right: int = 0, top: int = 0, bottom: int = 0) -> vs.VideoNode:
+    """
+    Alias for :py:func:`region_rel_mask`
+
+    Region relatively the clip with the desired numbers of pixels
+
+    :param clip:        Source clip
+    :param left:        Left side
+    :param right:       Right side
+    :param top:         Top side
+    :param bottom:      Bottom side
+    :return:            Regionned mask
+    """
+    return region_rel_mask(clip, left, right, top, bottom)
+
+
+def region_rel_mask(clip: vs.VideoNode, left: int = 0, right: int = 0, top: int = 0, bottom: int = 0) -> vs.VideoNode:
+    """
+    Region relatively the clip with the desired numbers of pixels
+
+    :param clip:        Source clip
+    :param left:        Left side
+    :param right:       Right side
+    :param top:         Top side
+    :param bottom:      Bottom side
+    :return:            Regionned mask
+    """
+    return clip.std.Crop(left, right, top, bottom).std.AddBorders(left, right, top, bottom)
+
+
+def region_abs_mask(clip: vs.VideoNode, width: int, height: int, left: int = 0, top: int = 0) -> vs.VideoNode:
+    """
+    Region the clip with absolute desired dimensions
+
+    :param clip:        Source clip
+    :param width:       Width of the box
+    :param height:      Height of the box
+    :param left:        Shift from the left, AKA x parameter
+    :param top:         Shift ftom the top, AKA y parameter
+    :return:            Regionned mask
+    """
+    def _crop(c: vs.VideoNode, w: int, h: int) -> vs.VideoNode:
+        return c.std.CropAbs(width, height, left, top).std.AddBorders(
+            left, w - width - left, top, h - height - top
+        )
+
+    if 0 in {clip.width, clip.height}:
+        def _region(n: int, f: vs.VideoFrame, c: vs.VideoNode) -> vs.VideoNode:
+            return _crop(c, f.width, f.height)
+        return clip.std.FrameEval(partial(_region, c=clip), clip)
+    return _crop(clip, clip.width, clip.height)
