@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import ClassVar, List, Optional, Sequence, Set, Tuple, Type
 
 import vapoursynth as vs
-from vsutil import Range, depth
+from vsutil import Range, depth, get_depth
 
 from .better_vsutil import join, split
 from .util import XxpandMode, _pick_px_op, expand, inpand, max_expr
@@ -220,6 +220,12 @@ class SobelStd(EdgeDetect):
     """Sobel–Feldman Vapoursynth plugin operator. 3x3 matrices."""
     def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.std.Sobel()
+
+
+class ASobel(EdgeDetect):
+    """Modified Sobel–Feldman operator from AWarpSharp. 3x3 matrices."""
+    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        return (core.warp.ASobel if get_depth(clip) < 32 else core.warpsf.ASobel)(clip, 255)
 
 
 class Scharr(EuclidianDistanceMatrixDetect):

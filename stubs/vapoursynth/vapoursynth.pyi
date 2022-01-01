@@ -868,6 +868,56 @@ class _Plugin_tedgemask_VideoNode_Bound(Plugin):
 # end implementation
 
 
+# implementation: warp
+
+class _Plugin_warp_Core_Bound(Plugin):
+    """
+    This class implements the module definitions for the corresponding VapourSynth plugin.
+    This class cannot be imported.
+    """
+    def ABlur(self, clip: "VideoNode", blur: typing.Optional[int] = None, type: typing.Optional[int] = None, planes: typing.Union[int, typing.Sequence[int], None] = None, opt: typing.Optional[int] = None) -> "VideoNode": ...
+    def ASobel(self, clip: "VideoNode", thresh: typing.Optional[int] = None, planes: typing.Union[int, typing.Sequence[int], None] = None, opt: typing.Optional[int] = None) -> "VideoNode": ...
+    def AWarp(self, clip: "VideoNode", mask: "VideoNode", depth: typing.Union[int, typing.Sequence[int], None] = None, chroma: typing.Optional[int] = None, planes: typing.Union[int, typing.Sequence[int], None] = None, opt: typing.Optional[int] = None, cplace: typing.Union[str, bytes, bytearray, None] = None) -> "VideoNode": ...
+    def AWarpSharp2(self, clip: "VideoNode", thresh: typing.Optional[int] = None, blur: typing.Optional[int] = None, type: typing.Optional[int] = None, depth: typing.Union[int, typing.Sequence[int], None] = None, chroma: typing.Optional[int] = None, planes: typing.Union[int, typing.Sequence[int], None] = None, opt: typing.Optional[int] = None, cplace: typing.Union[str, bytes, bytearray, None] = None) -> "VideoNode": ...
+
+
+class _Plugin_warp_VideoNode_Bound(Plugin):
+    """
+    This class implements the module definitions for the corresponding VapourSynth plugin.
+    This class cannot be imported.
+    """
+    def ABlur(self, blur: typing.Optional[int] = None, type: typing.Optional[int] = None, planes: typing.Union[int, typing.Sequence[int], None] = None, opt: typing.Optional[int] = None) -> "VideoNode": ...
+    def ASobel(self, thresh: typing.Optional[int] = None, planes: typing.Union[int, typing.Sequence[int], None] = None, opt: typing.Optional[int] = None) -> "VideoNode": ...
+    def AWarp(self, mask: "VideoNode", depth: typing.Union[int, typing.Sequence[int], None] = None, chroma: typing.Optional[int] = None, planes: typing.Union[int, typing.Sequence[int], None] = None, opt: typing.Optional[int] = None, cplace: typing.Union[str, bytes, bytearray, None] = None) -> "VideoNode": ...
+    def AWarpSharp2(self, thresh: typing.Optional[int] = None, blur: typing.Optional[int] = None, type: typing.Optional[int] = None, depth: typing.Union[int, typing.Sequence[int], None] = None, chroma: typing.Optional[int] = None, planes: typing.Union[int, typing.Sequence[int], None] = None, opt: typing.Optional[int] = None, cplace: typing.Union[str, bytes, bytearray, None] = None) -> "VideoNode": ...
+
+# end implementation
+
+
+# implementation: warpsf
+
+class _Plugin_warpsf_Core_Bound(Plugin):
+    """
+    This class implements the module definitions for the corresponding VapourSynth plugin.
+    This class cannot be imported.
+    """
+    def ABlur(self, clip: "VideoNode", blur: typing.Optional[int] = None, type: typing.Optional[int] = None, planes: typing.Union[int, typing.Sequence[int], None] = None) -> "VideoNode": ...
+    def ASobel(self, clip: "VideoNode", thresh: typing.Optional[float] = None, planes: typing.Union[int, typing.Sequence[int], None] = None) -> "VideoNode": ...
+    def AWarp(self, clip: "VideoNode", mask: "VideoNode", depth: typing.Union[int, typing.Sequence[int], None] = None, chroma: typing.Optional[int] = None, planes: typing.Union[int, typing.Sequence[int], None] = None) -> "VideoNode": ...
+
+
+class _Plugin_warpsf_VideoNode_Bound(Plugin):
+    """
+    This class implements the module definitions for the corresponding VapourSynth plugin.
+    This class cannot be imported.
+    """
+    def ABlur(self, blur: typing.Optional[int] = None, type: typing.Optional[int] = None, planes: typing.Union[int, typing.Sequence[int], None] = None) -> "VideoNode": ...
+    def ASobel(self, thresh: typing.Optional[float] = None, planes: typing.Union[int, typing.Sequence[int], None] = None) -> "VideoNode": ...
+    def AWarp(self, mask: "VideoNode", depth: typing.Union[int, typing.Sequence[int], None] = None, chroma: typing.Optional[int] = None, planes: typing.Union[int, typing.Sequence[int], None] = None) -> "VideoNode": ...
+
+# end implementation
+
+
 class VideoNode:
 # instance_bound_VideoNode: resize
     @property
@@ -895,6 +945,20 @@ class VideoNode:
     def tedgemask(self) -> _Plugin_tedgemask_VideoNode_Bound:
         """
         Edge detection plugin
+        """
+# end instance
+# instance_bound_VideoNode: warp
+    @property
+    def warp(self) -> _Plugin_warp_VideoNode_Bound:
+        """
+        Sharpen images by warping
+        """
+# end instance
+# instance_bound_VideoNode: warpsf
+    @property
+    def warpsf(self) -> _Plugin_warpsf_VideoNode_Bound:
+        """
+        Warpsharp floating point version
         """
 # end instance
 
@@ -1014,6 +1078,20 @@ class Core:
     def tedgemask(self) -> _Plugin_tedgemask_Core_Bound:
         """
         Edge detection plugin
+        """
+# end instance
+# instance_bound_Core: warp
+    @property
+    def warp(self) -> _Plugin_warp_Core_Bound:
+        """
+        Sharpen images by warping
+        """
+# end instance
+# instance_bound_Core: warpsf
+    @property
+    def warpsf(self) -> _Plugin_warpsf_Core_Bound:
+        """
+        Warpsharp floating point version
         """
 # end instance
 
