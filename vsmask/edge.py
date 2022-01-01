@@ -297,7 +297,7 @@ class ExSobel(EuclidianDistanceMatrixDetect):
 
 
 class FDOG(EuclidianDistanceMatrixDetect):
-    """Flow-based Difference Of Gaussian operator. 3x3 matrices from G41Fun."""
+    """Flow-based Difference Of Gaussian operator. 5x5 matrices from G41Fun."""
     matrices = [
         [1, 1, 0, -1, -1, 2, 2, 0, -2, -2, 3, 3, 0, -3, -3, 2, 2, 0, -2, -2, 1, 1, 0, -1, -1],
         [1, 2, 3, 2, 1, 1, 2, 3, 2, 1, 0, 0, 0, 0, 0, -1, -2, -3, -2, -1, -1, -2, -3, -2, -1]
@@ -306,7 +306,7 @@ class FDOG(EuclidianDistanceMatrixDetect):
 
 
 class FDOGTCanny(EdgeDetect):
-    """Flow-based Difference Of Gaussian TCanny Vapoursynth plugin operator. 3x3 matrices."""
+    """Flow-based Difference Of Gaussian TCanny Vapoursynth plugin operator. 5x5 matrices."""
     def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=6, scale=0.5)
 
