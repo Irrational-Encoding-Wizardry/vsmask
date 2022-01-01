@@ -225,7 +225,15 @@ class SobelStd(EdgeDetect):
 class ASobel(EdgeDetect):
     """Modified Sobel–Feldman operator from AWarpSharp. 3x3 matrices."""
     def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
-        return (core.warp.ASobel if get_depth(clip) < 32 else core.warpsf.ASobel)(clip, 255)
+        # warp.ASobel and warpsf.ASobel have different function signatures
+        # so mypy set the ternary expression as Callable[..., Any]
+        # which makes sense.
+        # Since we're using ``warn_return_any = True`` in mypy config,
+        # mypy warns us about not being able to call a function of unknown type
+        # and returning Any from ``_compute_mask`` declared to return "VideoNode".
+        # I could edit the stubs files but then, they will be wrong and adding more boilerplate code
+        # for just satisfy mypy here doesn't seem to be very relevant.
+        return (core.warp.ASobel if get_depth(clip) < 32 else core.warpsf.ASobel)(clip, 255)  # type: ignore
 
 
 class Scharr(EuclidianDistanceMatrixDetect):
