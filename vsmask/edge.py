@@ -170,7 +170,7 @@ class Roberts(EuclidianDistanceMatrixDetect):
     """Lawrence Roberts operator. 2x2 matrices computed in 3x3 matrices."""
     matrices = [
         [0, 0, 0, 0, 1, 0, 0, 0, -1],
-        [0, 1, 0, -1, 0, 0, 0, 0, 0]
+        [0, 0, 0, 0, 0, 1, 0, -1, 0]
     ]
 
 
