@@ -5,7 +5,7 @@ __all__ = ['EdgeDetect', 'MatrixEdgeDetect', 'SingleMatrix', 'EuclidianDistance'
 import warnings
 from abc import ABC, abstractmethod
 from enum import Enum, auto
-from typing import ClassVar, NoReturn, Optional, Sequence
+from typing import ClassVar, List, NoReturn, Optional, Sequence, Tuple, cast
 
 import vapoursynth as vs
 
@@ -27,6 +27,7 @@ class EdgeDetect(ABC):
         self,
         clip: vs.VideoNode,
         lthr: float = 0.0, hthr: Optional[float] = None,
+        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False,
         multi: float = 1.0
     ) -> vs.VideoNode:
         """
@@ -40,7 +41,7 @@ class EdgeDetect(ABC):
 
         :return:                Mask clip
         """
-        return self._mask(clip, lthr, hthr, multi, Feature.EDGE)
+        return self._mask(clip, lthr, hthr, multi, clamp, _Feature.EDGE)
 
     def get_mask(
         self,
@@ -60,12 +61,13 @@ class EdgeDetect(ABC):
         :return:                Mask clip
         """
         warnings.warn('', DeprecationWarning)
-        return self._mask(clip, lthr, hthr, multi, Feature.EDGE)
+        return self._mask(clip, lthr, hthr, multi, False, _Feature.EDGE)
 
     def ridgemask(
         self,
         clip: vs.VideoNode,
         lthr: float = 0.0, hthr: Optional[float] = None,
+        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False,
         multi: float = 1.0
     ) -> vs.VideoNode | NoReturn:
         """
@@ -86,6 +88,7 @@ class EdgeDetect(ABC):
         clip: vs.VideoNode,
         lthr: float = 0.0, hthr: Optional[float] = None,
         multi: float = 1.0,
+        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False,
         feature: _Feature = _Feature.EDGE
     ) -> vs.VideoNode:
         if not clip.format:
@@ -116,6 +119,26 @@ class EdgeDetect(ABC):
                 expr=f'x {hthr} > {peak} x {lthr} <= 0 x ? ?',
                 lut=lambda x: peak if x > hthr else 0 if x <= lthr else x
             )(mask)
+
+        if clamp:
+            if isinstance(clamp, list):
+                mask = core.std.Expr(mask, ['x {} max {} min'.format(*c) for c in clamp])
+            if isinstance(clamp, tuple):
+                mask = core.std.Expr(mask, 'x {} max {} min'.format(*clamp))
+            else:
+                assert mask.format
+                if is_float:
+                    clamp_vals = [(0., 1.), (-0.5, 0.5), (-0.5, 0.5)]
+                else:
+                    with mask.get_frame(0) as f:
+                        crange = cast(int, f.props['_ColorRange'])
+                    clamp_vals = [(0, peak)] * 3 if crange == 0 else [
+                        (16 << self._bits - 8, 235 << self._bits - 8),
+                        (16 << self._bits - 8, 240 << self._bits - 8),
+                        (16 << self._bits - 8, 240 << self._bits - 8)
+                    ]
+
+                mask = core.std.Expr(mask, ['x {} max {} min'.format(*c) for c in clamp_vals[:mask.format.num_planes]])
 
         return mask
 
