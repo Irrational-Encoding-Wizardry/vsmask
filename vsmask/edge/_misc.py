@@ -1,6 +1,8 @@
 __all__ = ['get_all_edge_detects']
 
-from typing import List, Optional, Set, Type
+import warnings
+from abc import ABCMeta
+from typing import Any, Callable, List, Optional, Set, Type, TypeVar
 
 import vapoursynth as vs
 
@@ -38,3 +40,19 @@ def get_all_edge_detects(
         edge_detect().get_mask(clip, lthr, hthr, multi).text.Text(edge_detect.__name__)  # type: ignore
         for edge_detect in sorted(all_subclasses, key=lambda x: x.__name__)
     ]
+
+
+
+_T = TypeVar('_T')
+
+
+def _deprecated(msg: str) -> Callable[[Type[_T]], Type[_T]]:
+    class _DeprecatedMeta(ABCMeta):
+        def __call__(cls, *args: Any, **kwargs: Any) -> Any:
+            warnings.warn(msg, DeprecationWarning)
+            return super().__call__(*args, **kwargs)
+
+    def _make_cls(cls: Type[_T]) -> Type[_T]:
+        return _DeprecatedMeta(cls.__name__, cls.__bases__, dict(cls.__dict__))
+
+    return _make_cls

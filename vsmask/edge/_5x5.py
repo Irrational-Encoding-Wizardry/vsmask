@@ -20,6 +20,7 @@ import vapoursynth as vs
 from vsutil import Range, depth
 
 from ._abstract import EdgeDetect, EuclidianDistance, Max, RidgeDetect, SingleMatrix
+from ._misc import _deprecated
 
 
 class Matrix5x5(EdgeDetect, ABC):
@@ -78,6 +79,7 @@ class FDoG(RidgeDetect, EuclidianDistance, Matrix5x5):
     divisors = [2, 2]
 
 
+@_deprecated('`FDOG` is deprecated, please use `FDoG` instead')
 class FDOG(FDoG):
     ...
 
@@ -88,6 +90,7 @@ class FDoGTCanny(Matrix5x5, EdgeDetect):
         return clip.tcanny.TCanny(0, mode=1, op=6, scale=0.5)
 
 
+@_deprecated('`FDOGTCanny` is deprecated, please use `FDoGTCanny` instead')
 class FDOGTCanny(FDoGTCanny):
     ...
 

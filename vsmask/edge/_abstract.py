@@ -60,7 +60,7 @@ class EdgeDetect(ABC):
 
         :return:                Mask clip
         """
-        warnings.warn('', DeprecationWarning)
+        warnings.warn(f'{self.__class__.__name__}: `get_mask` is deprecated, please use `edgemask` instead', DeprecationWarning)
         return self._mask(clip, lthr, hthr, multi, False, _Feature.EDGE)
 
     def ridgemask(
