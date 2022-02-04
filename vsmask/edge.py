@@ -175,13 +175,21 @@ class Roberts(EuclidianDistanceMatrixDetect):
 
 
 class TriticalTCanny(EdgeDetect):
-    """Operator used in Tritical's original TCanny filter"""
+    """
+    Operator used in Tritical's original TCanny filter.
+    Plain and simple orthogonal first order derivative.
+    3x3 matrix using TCanny filter.
+    """
     def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=0)
 
 
 class Tritical(EuclidianDistanceMatrixDetect):
-    """Operator used in Tritical's original TCanny filter"""
+    """
+    Operator used in Tritical's original TCanny filter.
+    Plain and simple orthogonal first order derivative.
+    3x3 matrix using std.Convolution.
+    """
     matrices = [
         [0, 0, 0, -1, 0, 1, 0, 0, 0],
         [0, 1, 0, 0, 0, 0, 0, -1, 0]
@@ -237,7 +245,11 @@ class ASobel(EdgeDetect):
 
 
 class Scharr(EuclidianDistanceMatrixDetect):
-    """H. Scharr optimized operator. 3x3 matrices."""
+    """
+    Original H. Scharr optimised operator which attempts
+    to achieve the perfect rotational symmetry with coefficients 3 and 10.
+    3x3 matrices.
+    """
     matrices = [
         [-3, 0, 3, -10, 0, 10, -3, 0, 3],
         [-3, -10, -3, 0, 0, 0, 3, 10, 3]
@@ -250,7 +262,7 @@ class ScharrG41(Scharr):
 
 
 class ScharrTCanny(EdgeDetect):
-    """H. Scharr optimized TCanny Vapoursynth plugin operator. 3x3 matrices."""
+    """H. Scharr optimised TCanny Vapoursynth plugin operator. 3x3 matrices."""
     def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=2, scale=4.07)
 
