@@ -19,7 +19,7 @@ from typing import Sequence
 import vapoursynth as vs
 from vsutil import Range, depth
 
-from ._abstract import EdgeDetect, EuclidianDistance, Max, SingleMatrix
+from ._abstract import EdgeDetect, EuclidianDistance, Max, RidgeDetect, SingleMatrix
 
 
 class Matrix5x5(EdgeDetect, ABC):
@@ -53,7 +53,7 @@ class LoG(SingleMatrix, Matrix5x5):
 
 
 # Euclidian distance
-class ExPrewitt(EuclidianDistance, Matrix5x5):
+class ExPrewitt(RidgeDetect, EuclidianDistance, Matrix5x5):
     """Extended Judith M. S. Prewitt operator."""
     matrices = [
         [2, 1, 0, -1, -2, 2, 1, 0, -1, -2, 2, 1, 0, -1, -2, 2, 1, 0, -1, -2, 2, 1, 0, -1, -2],
@@ -61,7 +61,7 @@ class ExPrewitt(EuclidianDistance, Matrix5x5):
     ]
 
 
-class ExSobel(EuclidianDistance, Matrix5x5):
+class ExSobel(RidgeDetect, EuclidianDistance, Matrix5x5):
     """Extended Sobel–Feldman operator."""
     matrices = [
         [2, 1, 0, -1, -2, 2, 1, 0, -1, -2, 4, 2, 0, -2, -4, 2, 1, 0, -1, -2, 2, 1, 0, -1, -2],
@@ -69,7 +69,7 @@ class ExSobel(EuclidianDistance, Matrix5x5):
     ]
 
 
-class FDoG(EuclidianDistance, Matrix5x5):
+class FDoG(RidgeDetect, EuclidianDistance, Matrix5x5):
     """Flow-based Difference of Gaussian"""
     matrices = [
         [1, 1, 0, -1, -1, 2, 2, 0, -2, -2, 3, 3, 0, -3, -3, 2, 2, 0, -2, -2, 1, 1, 0, -1, -1],
@@ -84,7 +84,7 @@ class FDOG(FDoG):
 
 class FDoGTCanny(Matrix5x5, EdgeDetect):
     """Flow-based Difference of Gaussian TCanny Vapoursynth plugin."""
-    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+    def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=6, scale=0.5)
 
 
@@ -106,11 +106,11 @@ class DoG(EuclidianDistance, Matrix5x5):
     def _postprocess(self, clip: vs.VideoNode) -> vs.VideoNode:
         return depth(clip, self._bits, range=Range.FULL, range_in=Range.FULL)
 
-    def _merge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
+    def _merge_edge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
         return vs.core.std.Expr(clips, 'x y -')
 
 
-class Farid(EuclidianDistance, Matrix5x5):
+class Farid(RidgeDetect, EuclidianDistance, Matrix5x5):
     """Farid & Simoncelli operator."""
     matrices = [
         [0.004127602875174862, 0.027308149775363867, 0.04673225765917656, 0.027308149775363867, 0.004127602875174862,

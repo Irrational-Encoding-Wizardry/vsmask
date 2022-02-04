@@ -23,11 +23,11 @@ from abc import ABC
 from typing import Sequence, Tuple
 
 import vapoursynth as vs
-from vsutil import get_depth, depth, Range
+from vsutil import Range, depth, get_depth
 
 from ..better_vsutil import join, split
 from ..util import XxpandMode, expand, inpand
-from ._abstract import EdgeDetect, EuclidianDistance, MatrixEdgeDetect, Max, SingleMatrix
+from ._abstract import EdgeDetect, EuclidianDistance, MatrixEdgeDetect, Max, RidgeDetect, SingleMatrix
 
 
 class Matrix3x3(EdgeDetect, ABC):
@@ -61,7 +61,7 @@ class Kayyali(SingleMatrix, Matrix3x3):
 
 
 # Euclidian Distance
-class Tritical(EuclidianDistance, Matrix3x3):
+class Tritical(RidgeDetect, EuclidianDistance, Matrix3x3):
     """
     Operator used in Tritical's original TCanny filter.
     Plain and simple orthogonal first order derivative.
@@ -77,11 +77,11 @@ class TriticalTCanny(Matrix3x3, EdgeDetect):
     Operator used in Tritical's original TCanny filter.
     Plain and simple orthogonal first order derivative.
     """
-    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+    def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=0)
 
 
-class Cross(EuclidianDistance, Matrix3x3):
+class Cross(RidgeDetect, EuclidianDistance, Matrix3x3):
     """
     "HotDoG" Operator from AVS ExTools by Dogway.
     Plain and simple cross first order derivative.
@@ -92,7 +92,7 @@ class Cross(EuclidianDistance, Matrix3x3):
     ]
 
 
-class Prewitt(EuclidianDistance, Matrix3x3):
+class Prewitt(RidgeDetect, EuclidianDistance, Matrix3x3):
     """Judith M. S. Prewitt operator."""
     matrices = [
         [1, 0, -1, 1, 0, -1, 1, 0, -1],
@@ -102,17 +102,17 @@ class Prewitt(EuclidianDistance, Matrix3x3):
 
 class PrewittStd(Matrix3x3, EdgeDetect):
     """Judith M. S. Prewitt Vapoursynth plugin operator."""
-    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+    def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.std.Prewitt()
 
 
 class PrewittTCanny(Matrix3x3, EdgeDetect):
     """Judith M. S. Prewitt TCanny plugin operator."""
-    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+    def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=1, scale=2)
 
 
-class Sobel(EuclidianDistance, Matrix3x3):
+class Sobel(RidgeDetect, EuclidianDistance, Matrix3x3):
     """Sobel–Feldman operator."""
     matrices = [
         [1, 0, -1, 2, 0, -2, 1, 0, -1],
@@ -122,31 +122,31 @@ class Sobel(EuclidianDistance, Matrix3x3):
 
 class SobelStd(Matrix3x3, EdgeDetect):
     """Sobel–Feldman Vapoursynth plugin operator."""
-    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+    def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.std.Sobel()
 
 
 class SobelTCanny(Matrix3x3, EdgeDetect):
     """Sobel–Feldman Vapoursynth plugin operator."""
-    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+    def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=2, scale=2)
 
 
 class ASobel(Matrix3x3, EdgeDetect):
     """Modified Sobel–Feldman operator from AWarpSharp."""
-    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+    def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         # warp.ASobel and warpsf.ASobel have different function signatures
         # so mypy set the ternary expression as Callable[..., Any]
         # which makes sense.
         # Since we're using ``warn_return_any = True`` in mypy config,
         # mypy warns us about not being able to call a function of unknown type
-        # and returning Any from ``_compute_mask`` declared to return "VideoNode".
+        # and returning Any from ``_compute_edge_mask`` declared to return "VideoNode".
         # I could edit the stubs files but then, they will be wrong and adding more boilerplate code
         # for just satisfy mypy here doesn't seem to be very relevant.
         return (vs.core.warp.ASobel if get_depth(clip) < 32 else vs.core.warpsf.ASobel)(clip, 255)  # type: ignore
 
 
-class Scharr(EuclidianDistance, Matrix3x3):
+class Scharr(RidgeDetect, EuclidianDistance, Matrix3x3):
     """
     Original H. Scharr optimised operator which attempts
     to achieve the perfect rotational symmetry with coefficients 3 and 10.
@@ -159,7 +159,7 @@ class Scharr(EuclidianDistance, Matrix3x3):
     divisors = [3, 3]
 
 
-class RScharr(EuclidianDistance, Matrix3x3):
+class RScharr(RidgeDetect, EuclidianDistance, Matrix3x3):
     """
     Refined H. Scharr operator to more accurately calculate
     1st derivatives for a 3x3 kernel with coeffs 47 and 162.
@@ -174,11 +174,11 @@ class RScharr(EuclidianDistance, Matrix3x3):
 
 class ScharrTCanny(Matrix3x3, EdgeDetect):
     """H. Scharr optimised TCanny Vapoursynth plugin operator."""
-    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+    def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=2, scale=4 / 3)
 
 
-class Kroon(EuclidianDistance, Matrix3x3):
+class Kroon(RidgeDetect, EuclidianDistance, Matrix3x3):
     """Dirk-Jan Kroon operator."""
     matrices = [
         [-17, 0, 17, -61, 0, 61, -17, 0, 17],
@@ -189,7 +189,7 @@ class Kroon(EuclidianDistance, Matrix3x3):
 
 class KroonTCanny(Matrix3x3, EdgeDetect):
     """Dirk-Jan Kroon TCanny Vapoursynth plugin operator."""
-    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+    def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=4, scale=1 / 17)
 
 
@@ -225,13 +225,13 @@ class FreyChen(MatrixEdgeDetect):
     def _postprocess(self, clip: vs.VideoNode) -> vs.VideoNode:
         return depth(clip, self._bits, range=Range.FULL, range_in=Range.FULL)
 
-    def _merge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
+    def _merge_edge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
         M = 'x x * y y * + z z * + a a * +'
         S = f'b b * c c * + d d * + e e * + f f * + {M} +'
         return vs.core.std.Expr(clips, f'{M} {S} / sqrt')
 
 
-class FreyChenG41(EuclidianDistance, Matrix3x3):
+class FreyChenG41(RidgeDetect, EuclidianDistance, Matrix3x3):
     """"Chen Frei" operator. 3x3 matrices from G41Fun."""
     matrices = [
         [-7, 0, 7, -10, 0, 10, -7, 0, 7],
@@ -288,7 +288,7 @@ class Kirsch(Max, Matrix3x3):
 
 class KirschTCanny(Matrix3x3, EdgeDetect):
     """Russell Kirsch compass TCanny Vapoursynth plugin operator."""
-    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+    def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=5)
 
 
@@ -305,7 +305,7 @@ class MinMax(EdgeDetect):
         super().__init__()
         self.radii = (rady, radc, radc)
 
-    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+    def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         assert clip.format
         planes = [
             vs.core.std.Expr(
