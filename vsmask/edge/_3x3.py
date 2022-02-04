@@ -189,6 +189,7 @@ class Kroon(EuclidianDistance, Matrix3x3):
 
 class KroonTCanny(Matrix3x3, EdgeDetect):
     """Dirk-Jan Kroon TCanny Vapoursynth plugin operator."""
+    def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=4, scale=1 / 17)
 
 

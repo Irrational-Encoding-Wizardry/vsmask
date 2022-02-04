@@ -1,4 +1,4 @@
-__all__ = ['EdgeDetect', 'MatrixEdgeDetect', 'SingleMatrixDetect', 'EuclidianDistanceMatrixDetect', 'MaxDetect']
+__all__ = ['EdgeDetect', 'MatrixEdgeDetect', 'SingleMatrix', 'EuclidianDistance', 'Max']
 
 from abc import ABC, abstractmethod
 from typing import ClassVar, Optional, Sequence
