@@ -268,9 +268,17 @@ class Scharr(EuclidianDistanceMatrixDetect):
     divisors = [3, 3]
 
 
-class ScharrG41(Scharr):
-    """H. Scharr optimized operator. 3x3 matrices from G41Fun."""
-    divisors = [3, 3]
+class RScharr(EuclidianDistanceMatrixDetect):
+    """
+    Refined H. Scharr operator to more accurately calculate
+    1st derivatives for a 3x3 kernel with coeffs 47 and 162.
+    3x3 matrices.
+    """
+    matrices = [
+        [-47, 0, 47, -162, 0, 162, -47, 0, 47],
+        [-47, -162, -47, 0, 0, 0, 47, 162, 47]
+    ]
+    divisors = [47, 47]
 
 
 class ScharrTCanny(EdgeDetect):
