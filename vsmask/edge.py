@@ -284,7 +284,7 @@ class RScharr(EuclidianDistanceMatrixDetect):
 class ScharrTCanny(EdgeDetect):
     """H. Scharr optimised TCanny Vapoursynth plugin operator. 3x3 matrices."""
     def _compute_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
-        return clip.tcanny.TCanny(0, mode=1, op=2, scale=4.07)
+        return clip.tcanny.TCanny(0, mode=1, op=2, scale=4 / 3)
 
 
 class Kroon(EuclidianDistanceMatrixDetect):
