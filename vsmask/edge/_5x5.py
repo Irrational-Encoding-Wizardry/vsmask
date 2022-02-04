@@ -89,6 +89,9 @@ class FDoGTCanny(Matrix5x5, EdgeDetect):
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=6, scale=0.5)
 
+    def _compute_ridge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        raise NotImplementedError
+
 
 @_deprecated('`FDOGTCanny` is deprecated, please use `FDoGTCanny` instead')
 class FDOGTCanny(FDoGTCanny):

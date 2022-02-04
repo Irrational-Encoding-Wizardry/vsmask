@@ -229,13 +229,13 @@ class SingleMatrix(MatrixEdgeDetect, ABC):
         lthr: float = 0.0, hthr: Optional[float] = None,
         clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False,
         multi: float = 1.0
-    ) -> NoReturn:
+    ) -> vs.VideoNode | NoReturn:
         raise NotImplementedError
 
     def _merge_edge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
         return clips[0]
 
-    def _merge_ridge(self, clips: Sequence[vs.VideoNode]) -> NoReturn:
+    def _merge_ridge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode | NoReturn:
         raise NotImplementedError
 
 
@@ -244,14 +244,15 @@ class EuclidianDistance(MatrixEdgeDetect, ABC):
         self,
         clip: vs.VideoNode,
         lthr: float = 0.0, hthr: Optional[float] = None,
+        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False,
         multi: float = 1.0
-    ) -> NoReturn:
+    ) -> vs.VideoNode | NoReturn:
         raise NotImplementedError
 
     def _merge_edge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
         return core.std.Expr(clips, 'x x * y y * + sqrt')
 
-    def _merge_ridge(self, clips: Sequence[vs.VideoNode]) -> NoReturn:
+    def _merge_ridge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode | NoReturn:
         raise NotImplementedError
 
 
@@ -260,12 +261,13 @@ class Max(MatrixEdgeDetect, ABC):
         self,
         clip: vs.VideoNode,
         lthr: float = 0.0, hthr: Optional[float] = None,
+        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False,
         multi: float = 1.0
-    ) -> NoReturn:
+    ) -> vs.VideoNode | NoReturn:
         raise NotImplementedError
 
     def _merge_edge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
         return core.std.Expr(clips, max_expr(len(clips)))
 
-    def _merge_ridge(self, clips: Sequence[vs.VideoNode]) -> NoReturn:
+    def _merge_ridge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode | NoReturn:
         raise NotImplementedError

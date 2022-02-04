@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 __all__ = [
     'Matrix3x3',
     # Single matrix
@@ -20,7 +22,7 @@ __all__ = [
 
 import math
 from abc import ABC
-from typing import Sequence, Tuple
+from typing import NoReturn, Sequence, Tuple
 
 import vapoursynth as vs
 from vsutil import Range, depth, get_depth
@@ -80,6 +82,10 @@ class TriticalTCanny(Matrix3x3, EdgeDetect):
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=0)
 
+    def _compute_ridge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        raise NotImplementedError
+
+
 
 class Cross(RidgeDetect, EuclidianDistance, Matrix3x3):
     """
@@ -105,11 +111,17 @@ class PrewittStd(Matrix3x3, EdgeDetect):
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.std.Prewitt()
 
+    def _compute_ridge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        raise NotImplementedError
+
 
 class PrewittTCanny(Matrix3x3, EdgeDetect):
     """Judith M. S. Prewitt TCanny plugin operator."""
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=1, scale=2)
+
+    def _compute_ridge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        raise NotImplementedError
 
 
 class Sobel(RidgeDetect, EuclidianDistance, Matrix3x3):
@@ -125,11 +137,17 @@ class SobelStd(Matrix3x3, EdgeDetect):
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.std.Sobel()
 
+    def _compute_ridge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        raise NotImplementedError
+
 
 class SobelTCanny(Matrix3x3, EdgeDetect):
     """Sobel–Feldman Vapoursynth plugin operator."""
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=2, scale=2)
+
+    def _compute_ridge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        raise NotImplementedError
 
 
 class ASobel(Matrix3x3, EdgeDetect):
@@ -144,6 +162,9 @@ class ASobel(Matrix3x3, EdgeDetect):
         # I could edit the stubs files but then, they will be wrong and adding more boilerplate code
         # for just satisfy mypy here doesn't seem to be very relevant.
         return (vs.core.warp.ASobel if get_depth(clip) < 32 else vs.core.warpsf.ASobel)(clip, 255)  # type: ignore
+
+    def _compute_ridge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        raise NotImplementedError
 
 
 class Scharr(RidgeDetect, EuclidianDistance, Matrix3x3):
@@ -177,6 +198,9 @@ class ScharrTCanny(Matrix3x3, EdgeDetect):
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=2, scale=4 / 3)
 
+    def _compute_ridge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        raise NotImplementedError
+
 
 class Kroon(RidgeDetect, EuclidianDistance, Matrix3x3):
     """Dirk-Jan Kroon operator."""
@@ -191,6 +215,9 @@ class KroonTCanny(Matrix3x3, EdgeDetect):
     """Dirk-Jan Kroon TCanny Vapoursynth plugin operator."""
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=4, scale=1 / 17)
+
+    def _compute_ridge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        raise NotImplementedError
 
 
 class FreyChen(MatrixEdgeDetect):
@@ -229,6 +256,9 @@ class FreyChen(MatrixEdgeDetect):
         M = 'x x * y y * + z z * + a a * +'
         S = f'b b * c c * + d d * + e e * + f f * + {M} +'
         return vs.core.std.Expr(clips, f'{M} {S} / sqrt')
+
+    def _merge_ridge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode | NoReturn:
+        raise NotImplementedError
 
 
 class FreyChenG41(RidgeDetect, EuclidianDistance, Matrix3x3):
@@ -291,6 +321,9 @@ class KirschTCanny(Matrix3x3, EdgeDetect):
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=5)
 
+    def _compute_ridge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        raise NotImplementedError
+
 
 # Misc
 class MinMax(EdgeDetect):
@@ -315,3 +348,6 @@ class MinMax(EdgeDetect):
             for p, rad in zip(split(clip), self.radii)
         ]
         return join(planes, clip.format.color_family)
+
+    def _compute_ridge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
+        raise NotImplementedError
