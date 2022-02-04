@@ -265,6 +265,7 @@ class Scharr(EuclidianDistanceMatrixDetect):
         [-3, 0, 3, -10, 0, 10, -3, 0, 3],
         [-3, -10, -3, 0, 0, 0, 3, 10, 3]
     ]
+    divisors = [3, 3]
 
 
 class ScharrG41(Scharr):
