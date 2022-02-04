@@ -29,7 +29,7 @@ def get_all_edge_detects(
     all_subclasses = {
         s for s in _all_subclasses(EdgeDetect)  # type: ignore
         if s.__name__ not in {
-            'MatrixEdgeDetect', 'SingleMatrixDetect', 'EuclidianDistanceMatrixDetect', 'MaxDetect',
+            'MatrixEdgeDetect', 'SingleMatrix', 'EuclidianDistance', 'Max',
             'Matrix1D', 'SavitzkyGolay',
             'Matrix2x2', 'Matrix3x3', 'Matrix5x5'
         }

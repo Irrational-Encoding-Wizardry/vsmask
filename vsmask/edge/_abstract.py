@@ -103,16 +103,16 @@ class MatrixEdgeDetect(EdgeDetect, ABC):
         return clip
 
 
-class SingleMatrixDetect(MatrixEdgeDetect, ABC):
+class SingleMatrix(MatrixEdgeDetect, ABC):
     def _merge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
         return clips[0]
 
 
-class EuclidianDistanceMatrixDetect(MatrixEdgeDetect, ABC):
+class EuclidianDistance(MatrixEdgeDetect, ABC):
     def _merge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
         return core.std.Expr(clips, 'x x * y y * + sqrt')
 
 
-class MaxDetect(MatrixEdgeDetect):
+class Max(MatrixEdgeDetect, ABC):
     def _merge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
         return core.std.Expr(clips, max_expr(len(clips)))

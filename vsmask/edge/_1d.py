@@ -40,14 +40,14 @@ from abc import ABC
 
 import vapoursynth as vs
 
-from ._abstract import EdgeDetect, EuclidianDistanceMatrixDetect
+from ._abstract import EdgeDetect, EuclidianDistance
 
 
 class Matrix1D(EdgeDetect, ABC):
     ...
 
 
-class TEdge(EuclidianDistanceMatrixDetect, Matrix1D):
+class TEdge(EuclidianDistance, Matrix1D):
     """(TEdgeMasktype=2) Avisynth plugin."""
     matrices = [
         [12, -74, 0, 74, -12],
@@ -63,8 +63,7 @@ class TEdgeTedgemask(Matrix1D, EdgeDetect):
         return clip.tedgemask.TEdgeMask(threshold=0, type=2)
 
 
-class SavitzkyGolay(EuclidianDistanceMatrixDetect, Matrix1D, ABC):
-    ...
+class SavitzkyGolay(EuclidianDistance, Matrix1D):
 
 
 class SavitzkyGolayDerivative1Quad5(SavitzkyGolay):

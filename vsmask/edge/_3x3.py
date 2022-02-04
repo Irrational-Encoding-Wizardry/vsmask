@@ -27,7 +27,7 @@ from vsutil import get_depth, depth, Range
 
 from ..better_vsutil import join, split
 from ..util import XxpandMode, expand, inpand
-from ._abstract import EdgeDetect, EuclidianDistanceMatrixDetect, MatrixEdgeDetect, MaxDetect, SingleMatrixDetect
+from ._abstract import EdgeDetect, EuclidianDistance, MatrixEdgeDetect, Max, SingleMatrix
 
 
 class Matrix3x3(EdgeDetect, ABC):
@@ -35,33 +35,33 @@ class Matrix3x3(EdgeDetect, ABC):
 
 
 # Single matrix
-class Laplacian1(SingleMatrixDetect, Matrix3x3):
+class Laplacian1(SingleMatrix, Matrix3x3):
     """Pierre-Simon de Laplace operator 1st implementation."""
     matrices = [[0, -1, 0, -1, 4, -1, 0, -1, 0]]
 
 
-class Laplacian2(SingleMatrixDetect, Matrix3x3):
+class Laplacian2(SingleMatrix, Matrix3x3):
     """Pierre-Simon de Laplace operator 2nd implementation."""
     matrices = [[1, -2, 1, -2, 4, -2, 1, -2, 1]]
 
 
-class Laplacian3(SingleMatrixDetect, Matrix3x3):
+class Laplacian3(SingleMatrix, Matrix3x3):
     """Pierre-Simon de Laplace operator 3rd implementation."""
     matrices = [[2, -1, 2, -1, -4, -1, 2, -1, 2]]
 
 
-class Laplacian4(SingleMatrixDetect, Matrix3x3):
+class Laplacian4(SingleMatrix, Matrix3x3):
     """Pierre-Simon de Laplace operator 4th implementation."""
     matrices = [[-1, -1, -1, -1, 8, -1, -1, -1, -1]]
 
 
-class Kayyali(SingleMatrixDetect, Matrix3x3):
+class Kayyali(SingleMatrix, Matrix3x3):
     """Kayyali operator."""
     matrices = [[6, 0, -6, 0, 0, 0, -6, 0, 6]]
 
 
 # Euclidian Distance
-class Tritical(EuclidianDistanceMatrixDetect, Matrix3x3):
+class Tritical(EuclidianDistance, Matrix3x3):
     """
     Operator used in Tritical's original TCanny filter.
     Plain and simple orthogonal first order derivative.
@@ -81,7 +81,7 @@ class TriticalTCanny(Matrix3x3, EdgeDetect):
         return clip.tcanny.TCanny(0, mode=1, op=0)
 
 
-class Cross(EuclidianDistanceMatrixDetect, Matrix3x3):
+class Cross(EuclidianDistance, Matrix3x3):
     """
     "HotDoG" Operator from AVS ExTools by Dogway.
     Plain and simple cross first order derivative.
@@ -92,7 +92,7 @@ class Cross(EuclidianDistanceMatrixDetect, Matrix3x3):
     ]
 
 
-class Prewitt(EuclidianDistanceMatrixDetect, Matrix3x3):
+class Prewitt(EuclidianDistance, Matrix3x3):
     """Judith M. S. Prewitt operator."""
     matrices = [
         [1, 0, -1, 1, 0, -1, 1, 0, -1],
@@ -112,7 +112,7 @@ class PrewittTCanny(Matrix3x3, EdgeDetect):
         return clip.tcanny.TCanny(0, mode=1, op=1, scale=2)
 
 
-class Sobel(EuclidianDistanceMatrixDetect, Matrix3x3):
+class Sobel(EuclidianDistance, Matrix3x3):
     """Sobel–Feldman operator."""
     matrices = [
         [1, 0, -1, 2, 0, -2, 1, 0, -1],
@@ -146,7 +146,7 @@ class ASobel(Matrix3x3, EdgeDetect):
         return (vs.core.warp.ASobel if get_depth(clip) < 32 else vs.core.warpsf.ASobel)(clip, 255)  # type: ignore
 
 
-class Scharr(EuclidianDistanceMatrixDetect, Matrix3x3):
+class Scharr(EuclidianDistance, Matrix3x3):
     """
     Original H. Scharr optimised operator which attempts
     to achieve the perfect rotational symmetry with coefficients 3 and 10.
@@ -159,7 +159,7 @@ class Scharr(EuclidianDistanceMatrixDetect, Matrix3x3):
     divisors = [3, 3]
 
 
-class RScharr(EuclidianDistanceMatrixDetect, Matrix3x3):
+class RScharr(EuclidianDistance, Matrix3x3):
     """
     Refined H. Scharr operator to more accurately calculate
     1st derivatives for a 3x3 kernel with coeffs 47 and 162.
@@ -178,7 +178,7 @@ class ScharrTCanny(Matrix3x3, EdgeDetect):
         return clip.tcanny.TCanny(0, mode=1, op=2, scale=4 / 3)
 
 
-class Kroon(EuclidianDistanceMatrixDetect, Matrix3x3):
+class Kroon(EuclidianDistance, Matrix3x3):
     """Dirk-Jan Kroon operator."""
     matrices = [
         [-17, 0, 17, -61, 0, 61, -17, 0, 17],
@@ -230,7 +230,7 @@ class FreyChen(MatrixEdgeDetect):
         return vs.core.std.Expr(clips, f'{M} {S} / sqrt')
 
 
-class FreyChenG41(EuclidianDistanceMatrixDetect, Matrix3x3):
+class FreyChenG41(EuclidianDistance, Matrix3x3):
     """"Chen Frei" operator. 3x3 matrices from G41Fun."""
     matrices = [
         [-7, 0, 7, -10, 0, 10, -7, 0, 7],
@@ -240,7 +240,7 @@ class FreyChenG41(EuclidianDistanceMatrixDetect, Matrix3x3):
 
 
 # Max
-class Robinson3(MaxDetect, Matrix3x3):
+class Robinson3(Max, Matrix3x3):
     """Robinson compass operator level 3."""
     matrices = [
         [1, 1, 1, 0, 0, 0, -1, -1, -1],
@@ -250,7 +250,7 @@ class Robinson3(MaxDetect, Matrix3x3):
     ]
 
 
-class Robinson5(MaxDetect, Matrix3x3):
+class Robinson5(Max, Matrix3x3):
     """Robinson compass operator level 5."""
     matrices = [
         [1, 2, 1, 0, 0, 0, -1, -2, -1],
@@ -260,7 +260,7 @@ class Robinson5(MaxDetect, Matrix3x3):
     ]
 
 
-class TheToof(MaxDetect, Matrix3x3):
+class TheToof(Max, Matrix3x3):
     """TheToof compass operator from SharpAAMCmod."""
     matrices = [
         [5, 10, 5, 0, 0, 0, -5, -10, -5],
@@ -271,7 +271,7 @@ class TheToof(MaxDetect, Matrix3x3):
     divisors = [4] * 4
 
 
-class Kirsch(MaxDetect, Matrix3x3):
+class Kirsch(Max, Matrix3x3):
     """Russell Kirsch compass operator."""
     matrices = [
         [5, 5, 5, -3, 0, -3, -3, -3, -3],
