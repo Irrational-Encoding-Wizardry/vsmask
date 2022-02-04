@@ -94,6 +94,17 @@ __all__ = [
     'SavitzkyGolayDeriv4Quart21',
     'SavitzkyGolayDeriv4Quart23',
     'SavitzkyGolayDeriv4Quart25',
+    #
+    'SavitzkyGolayDeriv5Quint7',
+    'SavitzkyGolayDeriv5Quint9',
+    'SavitzkyGolayDeriv5Quint11',
+    'SavitzkyGolayDeriv5Quint13',
+    'SavitzkyGolayDeriv5Quint15',
+    'SavitzkyGolayDeriv5Quint17',
+    'SavitzkyGolayDeriv5Quint19',
+    'SavitzkyGolayDeriv5Quint21',
+    'SavitzkyGolayDeriv5Quint23',
+    'SavitzkyGolayDeriv5Quint25',
 ]
 
 from abc import ABC
@@ -657,3 +668,63 @@ class SavitzkyGolayDeriv4Quart25(SavitzkyGolay):
     """Savitzky-Golay fourth quartic/quintic derivative operator of size 25"""
     matrices = [[1518, 253, -517, -897, -982, -857, -597, -267, 78, 393, 643, 803, 858, 803, 643, 393, 78, -267, -597, -857, -982, -897, -517, 253, 1518]] * 2
     divisors = [1430715] * 2
+
+
+class SavitzkyGolayDeriv5Quint7(SavitzkyGolay):
+    """Savitzky-Golay fifth quintic/sexic derivative operator of size 7"""
+    matrices = [[-1, 4, -5, 0, 5, -4, 1]] * 2
+    divisors = [2] * 2
+
+
+class SavitzkyGolayDeriv5Quint9(SavitzkyGolay):
+    """Savitzky-Golay fifth quintic/sexic derivative operator of size 9""" 
+    matrices = [[-4, 11, -4, -9, 0, 9, 4, -11, 4]] * 2
+    divisors = [26] * 2
+
+
+class SavitzkyGolayDeriv5Quint11(SavitzkyGolay):
+    """Savitzky-Golay fifth quintic/sexic derivative operator of size 11"""
+    matrices = [[-3, 6, 1, -4, -4, 0, 4, 4, -1, -6, 3]] * 2
+    divisors = [52] * 2
+
+
+class SavitzkyGolayDeriv5Quint13(SavitzkyGolay):
+    """Savitzky-Golay fifth quintic/sexic derivative operator of size 13"""
+    matrices = [[-22, 33, 18, -11, -26, -20, 0, 20, 26, 11, -18, -33, 22]] * 2
+    divisors = [884] * 2
+
+
+class SavitzkyGolayDeriv5Quint15(SavitzkyGolay):
+    """Savitzky-Golay fifth quintic/sexic derivative operator of size 15"""
+    matrices = [[-1001, 1144, 979, 44, -751, -1000, -675, 0, 675, 1000, 751, -44, -979, -1144, 1001]] * 2
+    divisors = [83980] * 2
+
+
+class SavitzkyGolayDeriv5Quint17(SavitzkyGolay):
+    """Savitzky-Golay fifth quintic/sexic derivative operator of size 17"""
+    matrices = [[-104, 91, 104, 39, -36, -83, -88, -55, 0, 55, 88, 83, 36, -39, -104, -91, 104]] * 2
+    divisors = [16796] * 2
+
+
+class SavitzkyGolayDeriv5Quint19(SavitzkyGolay):
+    """Savitzky-Golay fifth quintic/sexic derivative operator of size 19"""
+    matrices = [[-102, 68, 98, 58, -3, -54, -79, -74, -44, 0, 44, 74, 79, 54, 3, -58, -98, -68, 102]] * 2
+    divisors = [29716] * 2
+
+
+class SavitzkyGolayDeriv5Quint21(SavitzkyGolay):
+    """Savitzky-Golay fifth quintic/sexic derivative operator of size 21"""
+    matrices = [[-3876, 1938, 3468, 2618, 788, -1063, -2354, -2819, -2444, -1404, 0, 1404, 2444, 2819, 2354, 1063, -788, -2618, -3468, -1938, 3876]] * 2
+    divisors = [1931540] * 2
+
+
+class SavitzkyGolayDeriv5Quint23(SavitzkyGolay):
+    """Savitzky-Golay fifth quintic/sexic derivative operator of size 23"""
+    matrices = [[-209, 76, 171, 152, 77, -12, -87, -132, -141, -116, -65, 0, 65, 116, 141, 132, 87, 12, -77, -152, -171, -76, 209]] * 2
+    divisors = [170430] * 2
+
+
+class SavitzkyGolayDeriv5Quint25(SavitzkyGolay):
+    """Savitzky-Golay fifth quintic/sexic derivative operator of size 25"""
+    matrices = [[-1012, 253, 748, 753, 488, 119, -236, -501, -636, -631, -500, -275, 0, 275, 500, 631, 636, 501, 236, -119, -488, -753, -748, -253, 1012]] * 2
+    divisors = [1300650] * 2
