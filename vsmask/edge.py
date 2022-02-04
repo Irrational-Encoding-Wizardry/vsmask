@@ -196,6 +196,17 @@ class Tritical(EuclidianDistanceMatrixDetect):
     ]
 
 
+class Cross(EuclidianDistanceMatrixDetect):
+    """
+    "HotDoG" Operator from AVS ExTools by Dogway.
+    Plain and simple cross first order derivative.
+    """
+    matrices = [
+        [1, 0, 0, 0, 0, 0, 0, 0, -1],
+        [0, 0, -1, 0, 0, 0, 1, 0, 0]
+    ]
+
+
 class Prewitt(EuclidianDistanceMatrixDetect):
     """Judith M. S. Prewitt operator. 3x3 matrices."""
     matrices = [
