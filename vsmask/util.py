@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import Enum
 from functools import partial
 from itertools import islice, zip_longest
-from typing import Any, Callable, List, Optional, Sequence, Union
+from typing import List, Optional, Sequence
 
 import vapoursynth as vs
 from vsutil import EXPR_VARS, disallow_variable_format
@@ -12,42 +12,6 @@ from .better_vsutil import split
 from .types import MorphoFunc, ZResizer, ensure_format
 
 core = vs.core
-
-
-def _pick_px_op(
-    use_expr: bool,
-    expr: str,
-    lut: Union[int, float, Sequence[int], Sequence[float], Callable[..., Any]],
-) -> Callable[..., vs.VideoNode]:
-    """
-    Pick either std.Lut or std.Expr
-
-    :param use_expr: [description]
-
-    :param expr: [description]
-    :param lut: [description]
-
-    :return: Callable[..., vs.VideoNode]
-    """
-    if use_expr:
-        func = partial(core.std.Expr, expr=expr)
-    else:
-        if callable(lut):
-            func = partial(core.std.Lut, function=lut)
-        elif isinstance(lut, Sequence):
-            if all(isinstance(x, int) for x in lut):
-                func = partial(core.std.Lut, lut=lut)
-            elif all(isinstance(x, float) for x in lut):
-                func = partial(core.std.Lut, lutf=lut)
-            else:
-                raise ValueError('pick_px_operation: operations[1] is not a valid type!')
-        elif isinstance(lut, int):
-            func = partial(core.std.Lut, lut=lut)
-        elif isinstance(lut, float):
-            func = partial(core.std.Lut, lutf=lut)
-        else:
-            raise ValueError('pick_px_operation: operations[1] is not a valid type!')
-    return func
 
 
 def max_expr(n: int) -> str:
@@ -232,7 +196,7 @@ def region_abs_mask(clip: vs.VideoNode, width: int, height: int, left: int = 0, 
     :param width:       Width of the box
     :param height:      Height of the box
     :param left:        Shift from the left, AKA x parameter
-    :param top:         Shift ftom the top, AKA y parameter
+    :param top:         Shift from the top, AKA y parameter
     :return:            Regionned mask
     """
     def _crop(c: vs.VideoNode, w: int, h: int) -> vs.VideoNode:

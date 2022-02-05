@@ -9,7 +9,7 @@ from typing import ClassVar, List, NoReturn, Optional, Sequence, Tuple, cast
 
 import vapoursynth as vs
 
-from ..util import _pick_px_op, max_expr
+from ..util import max_expr
 
 core = vs.core
 
@@ -108,18 +108,20 @@ class EdgeDetect(ABC):
         mask = self._postprocess(mask)
 
         if multi != 1:
-            mask = _pick_px_op(
-                use_expr=is_float,
-                expr=f'x {multi} *',
-                lut=lambda x: round(max(min(x * multi, peak), 0))
-            )(mask)
+            if is_float:
+                mask = mask.std.Expr(f'x {multi} *')
+            else:
+                def _multi_func(x: int) -> int:
+                    return round(max(min(x * multi, peak), 0))
+                mask = mask.std.Lut(function=_multi_func)
 
         if lthr > 0 or hthr < peak:
-            mask = _pick_px_op(
-                use_expr=is_float,
-                expr=f'x {hthr} > {peak} x {lthr} <= 0 x ? ?',
-                lut=lambda x: peak if x > hthr else 0 if x <= lthr else x
-            )(mask)
+            if is_float:
+                mask = mask.std.Expr(f'x {hthr} > {peak} x {lthr} <= 0 x ? ?')
+            else:
+                def _thr_func(x: int) -> int | float:
+                    return peak if x > hthr else 0 if x <= lthr else x
+                mask = mask.std.Lut(function=_thr_func)
 
         if clamp:
             if isinstance(clamp, list):
