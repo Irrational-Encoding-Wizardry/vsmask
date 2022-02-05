@@ -11,7 +11,7 @@ Edge Masks
    :inherited-members:
    :show-inheritance:
 
-Utilify functions
+Utility functions
 =================
 .. automodule:: vsmask.util
    :members:
