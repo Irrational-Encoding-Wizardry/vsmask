@@ -120,7 +120,7 @@ class EdgeDetect(ABC):
                 mask = mask.std.Expr(f'x {hthr} > {peak} x {lthr} <= 0 x ? ?')
             else:
                 def _thr_func(x: int) -> int | float:
-                    return peak if x > hthr else 0 if x <= lthr else x
+                    return peak if x > hthr else 0 if x <= lthr else x  # type: ignore[operator]
                 mask = mask.std.Lut(function=_thr_func)
 
         if clamp:
