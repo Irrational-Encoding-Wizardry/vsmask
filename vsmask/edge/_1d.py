@@ -1,3 +1,5 @@
+"""1D matrices"""
+
 __all__ = [
     'Matrix1D',
     'TEdge', 'TEdgeTedgemask',

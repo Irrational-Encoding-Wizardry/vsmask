@@ -1,3 +1,7 @@
+"""
+Edge and ridge detection submodule
+"""
+
 # flake8: noqa
 from ._1d import *
 from ._2x2 import *

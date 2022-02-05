@@ -1,3 +1,5 @@
+"""2D matrices 3x3"""
+
 __all__ = [
     'Matrix2x2',
     'Roberts'

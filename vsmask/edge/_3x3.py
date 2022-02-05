@@ -1,3 +1,5 @@
+"""2D matrices 5x5"""
+
 from __future__ import annotations
 
 __all__ = [
@@ -86,7 +88,6 @@ class TriticalTCanny(Matrix3x3, EdgeDetect):
         raise NotImplementedError
 
 
-
 class Cross(RidgeDetect, EuclidianDistance, Matrix3x3):
     """
     "HotDoG" Operator from AVS ExTools by Dogway.
@@ -171,7 +172,6 @@ class Scharr(RidgeDetect, EuclidianDistance, Matrix3x3):
     """
     Original H. Scharr optimised operator which attempts
     to achieve the perfect rotational symmetry with coefficients 3 and 10.
-
     """
     matrices = [
         [-3, 0, 3, -10, 0, 10, -3, 0, 3],
@@ -184,7 +184,6 @@ class RScharr(RidgeDetect, EuclidianDistance, Matrix3x3):
     """
     Refined H. Scharr operator to more accurately calculate
     1st derivatives for a 3x3 kernel with coeffs 47 and 162.
-
     """
     matrices = [
         [-47, 0, 47, -162, 0, 162, -47, 0, 47],
