@@ -1,8 +1,8 @@
-__all__ = ['get_all_edge_detects']
+from __future__ import annotations
 
 import warnings
 from abc import ABCMeta
-from typing import Any, Callable, List, Optional, Set, Type, TypeVar, cast
+from typing import Any, Callable, List, Optional, Set, Tuple, Type, TypeVar, cast
 
 import vapoursynth as vs
 
@@ -14,7 +14,8 @@ core = vs.core
 def get_all_edge_detects(
     clip: vs.VideoNode,
     lthr: float = 0.0, hthr: Optional[float] = None,
-    multi: float = 1.0
+    multi: float = 1.0,
+    clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False
 ) -> List[vs.VideoNode]:
     """
     Returns all the EdgeDetect subclasses
@@ -23,9 +24,27 @@ def get_all_edge_detects(
     :param lthr:        See :py:func:`EdgeDetect.get_mask`
     :param hthr:        See :py:func:`EdgeDetect.get_mask`
     :param multi:       See :py:func:`EdgeDetect.get_mask`
+    :param clamp:       Clamp to TV or full range if True or specified range `(low, high)`
+
     :return:            A list edge masks
     """
-    def _all_subclasses(cls: Type[EdgeDetect]) -> Set[Type[EdgeDetect]]:
+    def _all_subclasses(cls: Type[EdgeDetect] = EdgeDetect) -> Set[Type[EdgeDetect]]:
+        return set(cls.__subclasses__()).union(s for c in cls.__subclasses__() for s in _all_subclasses(c))
+
+    all_subclasses = {
+        s for s in _all_subclasses()
+        if s.__name__ not in {
+            'MatrixEdgeDetect', 'RidgeDetect', 'SingleMatrix', 'EuclidianDistance', 'Max',
+            'Matrix1D', 'SavitzkyGolay', 'SavitzkyGolayNormalise',
+            'Matrix2x2', 'Matrix3x3', 'Matrix5x5'
+        }
+    }
+    return [
+        edge_detect().edgemask(clip, lthr, hthr, multi, clamp).text.Text(edge_detect.__name__)
+        for edge_detect in sorted(all_subclasses, key=lambda x: x.__name__)
+    ]
+
+
         return set(cls.__subclasses__()).union(s for c in cls.__subclasses__() for s in _all_subclasses(c))
 
     all_subclasses = {

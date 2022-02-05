@@ -27,8 +27,8 @@ class EdgeDetect(ABC):
         self,
         clip: vs.VideoNode,
         lthr: float = 0.0, hthr: Optional[float] = None,
-        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False,
-        multi: float = 1.0
+        multi: float = 1.0,
+        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False
     ) -> vs.VideoNode:
         """
         Makes edge mask based on convolution kernel.
@@ -38,6 +38,7 @@ class EdgeDetect(ABC):
         :param lthr:            Low threshold. Anything below lthr will be set to 0
         :param hthr:            High threshold. Anything above hthr will be set to the range max
         :param multi:           Multiply all pixels by this before thresholding
+        :param clamp:           Clamp to TV or full range if True or specified range `(low, high)`
 
         :return:                Mask clip
         """
@@ -50,8 +51,7 @@ class EdgeDetect(ABC):
         multi: float = 1.0
     ) -> vs.VideoNode:
         """
-        Makes edge mask based on convolution kernel.
-        The resulting mask can be thresholded with lthr, hthr and multiplied with multi.
+        This method is deprecated, pleasee use `edgemask` instead.
 
         :param clip:            Source clip
         :param lthr:            Low threshold. Anything below lthr will be set to 0
@@ -67,8 +67,8 @@ class EdgeDetect(ABC):
         self,
         clip: vs.VideoNode,
         lthr: float = 0.0, hthr: Optional[float] = None,
-        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False,
-        multi: float = 1.0
+        multi: float = 1.0,
+        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False
     ) -> vs.VideoNode | NoReturn:
         """
         Makes ridge mask based on convolution kernel.
@@ -78,6 +78,7 @@ class EdgeDetect(ABC):
         :param lthr:            Low threshold. Anything below lthr will be set to 0
         :param hthr:            High threshold. Anything above hthr will be set to the range max
         :param multi:           Multiply all pixels by this before thresholding
+        :param clamp:           Clamp to TV or full range if True or specified range `(low, high)`
 
         :return:                Mask clip
         """
@@ -212,8 +213,8 @@ class RidgeDetect(MatrixEdgeDetect):
         self,
         clip: vs.VideoNode,
         lthr: float = 0.0, hthr: Optional[float] = None,
+        multi: float = 1.0,
         clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False,
-        multi: float = 1.0
     ) -> vs.VideoNode:
         return self._mask(clip, lthr, hthr, multi, clamp, _Feature.RIDGE)
 
@@ -227,8 +228,8 @@ class SingleMatrix(MatrixEdgeDetect, ABC):
         self,
         clip: vs.VideoNode,
         lthr: float = 0.0, hthr: Optional[float] = None,
-        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False,
-        multi: float = 1.0
+        multi: float = 1.0,
+        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False
     ) -> vs.VideoNode | NoReturn:
         raise NotImplementedError
 
@@ -244,8 +245,8 @@ class EuclidianDistance(MatrixEdgeDetect, ABC):
         self,
         clip: vs.VideoNode,
         lthr: float = 0.0, hthr: Optional[float] = None,
-        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False,
-        multi: float = 1.0
+        multi: float = 1.0,
+        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False
     ) -> vs.VideoNode | NoReturn:
         raise NotImplementedError
 
@@ -261,8 +262,8 @@ class Max(MatrixEdgeDetect, ABC):
         self,
         clip: vs.VideoNode,
         lthr: float = 0.0, hthr: Optional[float] = None,
-        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False,
-        multi: float = 1.0
+        multi: float = 1.0,
+        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False
     ) -> vs.VideoNode | NoReturn:
         raise NotImplementedError
 
