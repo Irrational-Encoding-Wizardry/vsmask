@@ -22,7 +22,7 @@ setup(
     description='Various masking tools for Vapoursynth',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    packages=['vsmask'],
+    packages=['vsmask', 'vsmask.edge'],
     url='',
     package_data={
         'vsmask': ['py.typed'],
