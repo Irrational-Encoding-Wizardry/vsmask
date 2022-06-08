@@ -154,7 +154,7 @@ __all__ = [
     # Euclidian distance
     'ExPrewitt',
     'ExSobel',
-    'FDoG', 'FDOG', 'FDoGTCanny', 'FDOGTCanny',
+    'FDoG', 'FDoGTCanny',
     'DoG',
     'Farid',
     # Max
