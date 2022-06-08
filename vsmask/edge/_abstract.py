@@ -44,25 +44,6 @@ class EdgeDetect(ABC):
         """
         return self._mask(clip, lthr, hthr, multi, clamp, _Feature.EDGE)
 
-    def get_mask(
-        self,
-        clip: vs.VideoNode,
-        lthr: float = 0.0, hthr: Optional[float] = None,
-        multi: float = 1.0
-    ) -> vs.VideoNode:
-        """
-        This method is deprecated, pleasee use `edgemask` instead.
-
-        :param clip:            Source clip
-        :param lthr:            Low threshold. Anything below lthr will be set to 0
-        :param hthr:            High threshold. Anything above hthr will be set to the range max
-        :param multi:           Multiply all pixels by this before thresholding
-
-        :return:                Mask clip
-        """
-        warnings.warn(f'{self.__class__.__name__}: `get_mask` is deprecated, please use `edgemask` instead', DeprecationWarning)
-        return self._mask(clip, lthr, hthr, multi, False, _Feature.EDGE)
-
     def ridgemask(
         self,
         clip: vs.VideoNode,

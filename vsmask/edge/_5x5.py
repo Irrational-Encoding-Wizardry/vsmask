@@ -6,7 +6,7 @@ __all__ = [
     # Euclidian distance
     'ExPrewitt',
     'ExSobel',
-    'FDoG', 'FDOG', 'FDoGTCanny', 'FDOGTCanny',
+    'FDoG', 'FDoGTCanny',
     'DoG',
     'Farid',
     # Max
@@ -20,7 +20,6 @@ import vapoursynth as vs
 from vsutil import Range, depth
 
 from ._abstract import EdgeDetect, EuclidianDistance, Max, RidgeDetect, SingleMatrix
-from ._misc import _deprecated
 
 
 class Matrix5x5(EdgeDetect, ABC):
@@ -79,11 +78,6 @@ class FDoG(RidgeDetect, EuclidianDistance, Matrix5x5):
     divisors = [2, 2]
 
 
-@_deprecated('`FDOG` is deprecated, please use `FDoG` instead')
-class FDOG(FDoG):
-    ...
-
-
 class FDoGTCanny(Matrix5x5, EdgeDetect):
     """Flow-based Difference of Gaussian TCanny Vapoursynth plugin."""
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
@@ -91,11 +85,6 @@ class FDoGTCanny(Matrix5x5, EdgeDetect):
 
     def _compute_ridge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         raise NotImplementedError
-
-
-@_deprecated('`FDOGTCanny` is deprecated, please use `FDoGTCanny` instead')
-class FDOGTCanny(FDoGTCanny):
-    ...
 
 
 class DoG(EuclidianDistance, Matrix5x5):
