@@ -26,10 +26,8 @@ import math
 from abc import ABC
 from typing import NoReturn, Sequence, Tuple
 
-import vapoursynth as vs
-from vsutil import Range, depth, get_depth
 
-from ..better_vsutil import join, split
+from vstools import ColorRange, depth, get_depth, join, split, vs
 from ..util import XxpandMode, expand, inpand
 from ._abstract import EdgeDetect, EuclidianDistance, MatrixEdgeDetect, Max, RidgeDetect, SingleMatrix
 
@@ -81,6 +79,7 @@ class TriticalTCanny(Matrix3x3, EdgeDetect):
     Operator used in Tritical's original TCanny filter.
     Plain and simple orthogonal first order derivative.
     """
+
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=0)
 
@@ -109,6 +108,7 @@ class Prewitt(RidgeDetect, EuclidianDistance, Matrix3x3):
 
 class PrewittStd(Matrix3x3, EdgeDetect):
     """Judith M. S. Prewitt Vapoursynth plugin operator."""
+
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.std.Prewitt()
 
@@ -118,6 +118,7 @@ class PrewittStd(Matrix3x3, EdgeDetect):
 
 class PrewittTCanny(Matrix3x3, EdgeDetect):
     """Judith M. S. Prewitt TCanny plugin operator."""
+
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=1, scale=2)
 
@@ -135,6 +136,7 @@ class Sobel(RidgeDetect, EuclidianDistance, Matrix3x3):
 
 class SobelStd(Matrix3x3, EdgeDetect):
     """Sobel–Feldman Vapoursynth plugin operator."""
+
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.std.Sobel()
 
@@ -144,6 +146,7 @@ class SobelStd(Matrix3x3, EdgeDetect):
 
 class SobelTCanny(Matrix3x3, EdgeDetect):
     """Sobel–Feldman Vapoursynth plugin operator."""
+
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=2, scale=2)
 
@@ -153,6 +156,7 @@ class SobelTCanny(Matrix3x3, EdgeDetect):
 
 class ASobel(Matrix3x3, EdgeDetect):
     """Modified Sobel–Feldman operator from AWarpSharp."""
+
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         # warp.ASobel and warpsf.ASobel have different function signatures
         # so mypy set the ternary expression as Callable[..., Any]
@@ -194,6 +198,7 @@ class RScharr(RidgeDetect, EuclidianDistance, Matrix3x3):
 
 class ScharrTCanny(Matrix3x3, EdgeDetect):
     """H. Scharr optimised TCanny Vapoursynth plugin operator."""
+
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=2, scale=4 / 3)
 
@@ -212,6 +217,7 @@ class Kroon(RidgeDetect, EuclidianDistance, Matrix3x3):
 
 class KroonTCanny(Matrix3x3, EdgeDetect):
     """Dirk-Jan Kroon TCanny Vapoursynth plugin operator."""
+
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=4, scale=1 / 17)
 
@@ -249,7 +255,7 @@ class FreyChen(MatrixEdgeDetect):
         return depth(clip, 32)
 
     def _postprocess(self, clip: vs.VideoNode) -> vs.VideoNode:
-        return depth(clip, self._bits, range=Range.FULL, range_in=Range.FULL)
+        return depth(clip, self._bits, range_in=ColorRange.FULL, range_out=ColorRange.FULL)
 
     def _merge_edge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
         M = 'x x * y y * + z z * + a a * +'
@@ -317,6 +323,7 @@ class Kirsch(Max, Matrix3x3):
 
 class KirschTCanny(Matrix3x3, EdgeDetect):
     """Russell Kirsch compass TCanny Vapoursynth plugin operator."""
+
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=5)
 

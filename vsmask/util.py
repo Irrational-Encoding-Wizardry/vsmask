@@ -1,17 +1,12 @@
 from __future__ import annotations
 
-from enum import Enum
 from functools import partial
 from itertools import islice, zip_longest
 from typing import List, Optional, Sequence
 
-import vapoursynth as vs
-from vsutil import EXPR_VARS, disallow_variable_format
+from vstools import EXPR_VARS, core, disallow_variable_format, split, vs, CustomEnum
 
-from .better_vsutil import split
 from .types import MorphoFunc, ZResizer, ensure_format
-
-core = vs.core
 
 
 def max_expr(n: int) -> str:
@@ -24,7 +19,7 @@ def max_expr(n: int) -> str:
     return ' '.join(var for var in EXPR_VARS[:n]) + ' max' * (n - 1)
 
 
-class XxpandMode(Enum):
+class XxpandMode(CustomEnum):
     """Expand/inpand mode"""
     RECTANGLE = object()
     """Rectangular shape"""

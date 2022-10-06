@@ -6,11 +6,11 @@ import warnings
 from abc import ABCMeta
 from typing import Any, Callable, List, Optional, Set, Tuple, Type, TypeVar, cast
 
-import vapoursynth as vs
+
 
 from ._abstract import EdgeDetect, RidgeDetect
 
-core = vs.core
+
 
 
 def get_all_edge_detects(

@@ -16,8 +16,8 @@ __all__ = [
 from abc import ABC
 from typing import Sequence
 
-import vapoursynth as vs
-from vsutil import Range, depth
+
+from vstools import ColorRange, depth, vs
 
 from ._abstract import EdgeDetect, EuclidianDistance, Max, RidgeDetect, SingleMatrix
 
@@ -80,6 +80,7 @@ class FDoG(RidgeDetect, EuclidianDistance, Matrix5x5):
 
 class FDoGTCanny(Matrix5x5, EdgeDetect):
     """Flow-based Difference of Gaussian TCanny Vapoursynth plugin."""
+
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tcanny.TCanny(0, mode=1, op=6, scale=0.5)
 
@@ -99,7 +100,7 @@ class DoG(EuclidianDistance, Matrix5x5):
         return depth(clip, 32)
 
     def _postprocess(self, clip: vs.VideoNode) -> vs.VideoNode:
-        return depth(clip, self._bits, range=Range.FULL, range_in=Range.FULL)
+        return depth(clip, self._bits, range_out=ColorRange.FULL, range_in=ColorRange.FULL)
 
     def _merge_edge(self, clips: Sequence[vs.VideoNode]) -> vs.VideoNode:
         return vs.core.std.Expr(clips, 'x y -')
@@ -107,24 +108,25 @@ class DoG(EuclidianDistance, Matrix5x5):
 
 class Farid(RidgeDetect, EuclidianDistance, Matrix5x5):
     """Farid & Simoncelli operator."""
-    matrices = [
-        [0.004127602875174862, 0.027308149775363867, 0.04673225765917656, 0.027308149775363867, 0.004127602875174862,
-         0.010419993699470744, 0.06893849946536831, 0.11797400212587895, 0.06893849946536831, 0.010419993699470744,
-         0.0, 0.0, 0.0, 0.0, 0.0,
-         -0.010419993699470744, -0.06893849946536831, -0.11797400212587895, -0.06893849946536831, -0.010419993699470744,
-         -0.004127602875174862, -0.027308149775363867, -0.04673225765917656, -0.027308149775363867, -0.004127602875174862],
-        [0.004127602875174862, 0.027308149775363867, 0.04673225765917656, 0.027308149775363867, 0.004127602875174862,
-         0.010419993699470744, 0.06893849946536831, 0.11797400212587895, 0.06893849946536831, 0.010419993699470744,
-         0.0, 0.0, 0.0, 0.0, 0.0,
-         -0.010419993699470744, -0.06893849946536831, -0.11797400212587895, -0.06893849946536831, -0.010419993699470744,
-         -0.004127602875174862, -0.027308149775363867, -0.04673225765917656, -0.027308149775363867, -0.004127602875174862]
-    ]
+    matrices = [[
+        0.004127602875174862, 0.027308149775363867, 0.04673225765917656, 0.027308149775363867, 0.004127602875174862,
+        0.010419993699470744, 0.06893849946536831, 0.11797400212587895, 0.06893849946536831, 0.010419993699470744,
+        0.0, 0.0, 0.0, 0.0, 0.0,
+        -0.010419993699470744, -0.06893849946536831, -0.11797400212587895, -0.06893849946536831, -0.010419993699470744,
+        -0.004127602875174862, -0.027308149775363867, -0.04673225765917656, -0.027308149775363867, -0.004127602875174862
+    ], [
+        0.004127602875174862, 0.027308149775363867, 0.04673225765917656, 0.027308149775363867, 0.004127602875174862,
+        0.010419993699470744, 0.06893849946536831, 0.11797400212587895, 0.06893849946536831, 0.010419993699470744,
+        0.0, 0.0, 0.0, 0.0, 0.0,
+        -0.010419993699470744, -0.06893849946536831, -0.11797400212587895, -0.06893849946536831, -0.010419993699470744,
+        -0.004127602875174862, -0.027308149775363867, -0.04673225765917656, -0.027308149775363867, -0.004127602875174862
+    ]]
 
     def _preprocess(self, clip: vs.VideoNode) -> vs.VideoNode:
         return depth(clip, 32)
 
     def _postprocess(self, clip: vs.VideoNode) -> vs.VideoNode:
-        return depth(clip, self._bits, range=Range.FULL, range_in=Range.FULL)
+        return depth(clip, self._bits, range_out=ColorRange.FULL, range_in=ColorRange.FULL)
 
 
 # Max

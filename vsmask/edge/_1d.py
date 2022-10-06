@@ -112,8 +112,8 @@ __all__ = [
 from abc import ABC
 from typing import Sequence
 
-import vapoursynth as vs
-from vsutil import Range, depth
+
+from vstools import ColorRange, depth, vs
 
 from ._abstract import EdgeDetect, EuclidianDistance
 
@@ -134,6 +134,7 @@ class TEdge(EuclidianDistance, Matrix1D):
 
 class TEdgeTedgemask(Matrix1D, EdgeDetect):
     """(tedgemask.TEdgeMask(threshold=0.0, type=2)) Vapoursynth plugin."""
+
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return clip.tedgemask.TEdgeMask(threshold=0, type=2)
 
@@ -150,7 +151,7 @@ class SavitzkyGolayNormalise(SavitzkyGolay):
         return depth(clip, 32)
 
     def _postprocess(self, clip: vs.VideoNode) -> vs.VideoNode:
-        return depth(clip, self._bits, range=Range.FULL, range_in=Range.FULL)
+        return depth(clip, self._bits, range_in=ColorRange.FULL, range_out=ColorRange.FULL)
 
     def _get_matrices(self) -> Sequence[Sequence[float]]:
         assert self.divisors

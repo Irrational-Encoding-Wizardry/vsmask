@@ -6,11 +6,11 @@ from abc import ABC, abstractmethod
 from enum import Enum, auto
 from typing import ClassVar, List, NoReturn, Optional, Sequence, Tuple, cast
 
-import vapoursynth as vs
+
 
 from ..util import max_expr
 
-core = vs.core
+
 
 
 class _Feature(Enum):
