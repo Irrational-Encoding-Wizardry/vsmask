@@ -26,8 +26,8 @@ import math
 from abc import ABC
 from typing import NoReturn, Sequence, Tuple
 
-
 from vstools import ColorRange, depth, get_depth, join, split, vs
+
 from ..util import XxpandMode, expand, inpand
 from ._abstract import EdgeDetect, EuclidianDistance, MatrixEdgeDetect, Max, RidgeDetect, SingleMatrix
 

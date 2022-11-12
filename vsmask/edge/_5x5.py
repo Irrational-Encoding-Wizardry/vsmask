@@ -16,7 +16,6 @@ __all__ = [
 from abc import ABC
 from typing import Sequence
 
-
 from vstools import ColorRange, depth, vs
 
 from ._abstract import EdgeDetect, EuclidianDistance, Max, RidgeDetect, SingleMatrix

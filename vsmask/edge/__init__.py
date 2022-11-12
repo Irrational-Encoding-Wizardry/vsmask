@@ -10,7 +10,6 @@ from ._5x5 import *
 from ._abstract import *
 from ._misc import *
 
-
 __all__ = [
     # Abstract
     'EdgeDetect', 'MatrixEdgeDetect', 'SingleMatrix', 'EuclidianDistance', 'Max', 'RidgeDetect',

@@ -6,11 +6,9 @@ import warnings
 from abc import ABCMeta
 from typing import Any, Callable, List, Optional, Set, Tuple, Type, TypeVar, cast
 
-
+from vstools import vs
 
 from ._abstract import EdgeDetect, RidgeDetect
-
-
 
 
 def get_all_edge_detects(
