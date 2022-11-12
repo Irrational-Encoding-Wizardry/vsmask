@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from functools import partial
 from itertools import islice, zip_longest
-from typing import List, Optional, Sequence
+from typing import Iterable, List, Optional, Sequence
 
 from vskernels import Bilinear, Kernel, KernelT
-from vstools import EXPR_VARS, CustomEnum, core, disallow_variable_format, flatten, split, vs
+from vstools import EXPR_VARS, CustomEnum, check_variable_format, core, disallow_variable_format, flatten, split, vs
 
-from .types import MorphoFunc, ensure_format
+from .types import MorphoFunc
 
 
 def max_expr(n: int) -> str:
@@ -125,14 +125,16 @@ def max_planes(*clips: vs.VideoNode, resizer: KernelT = Bilinear) -> vs.VideoNod
     """
     resizer = Kernel.ensure_obj(resizer, max_planes)
 
-    model = ensure_format(clips[0])
+    model = clips[0]
+    assert check_variable_format(model, max_planes)
+
     width, height, format_target = model.width, model.height, model.format
 
     format_target = format_target.replace(subsampling_w=0, subsampling_h=0)
 
-    planes = flatten(
+    planes = list[vs.VideoNode](flatten(  # type: ignore[arg-type]
         split(resizer.scale(clip, width, height, format=format_target)) for clip in clips
-    )
+    ))
 
     def _max_clips(p: Sequence[vs.VideoNode]) -> vs.VideoNode:
         return core.std.Expr(p, max_expr(len(p)))
