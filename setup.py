@@ -1,38 +1,42 @@
-from distutils.util import convert_path
-from typing import Any, Dict
+#!/usr/bin/env python3
 
-from setuptools import setup
+import setuptools
+from pathlib import Path
 
-meta: Dict[str, Any] = {}
-with open(convert_path('vsmask/_metadata.py'), encoding='utf-8') as f:
-    exec(f.read(), meta)
+package_name = 'vsmask'
 
-with open('README.md', encoding='utf-8') as fh:
-    long_description = fh.read()
+exec(Path(f'{package_name}/_metadata.py').read_text(), meta := dict[str, str]())
 
-with open('requirements.txt', encoding='utf-8') as fh:
-    install_requires = fh.read()
+readme = Path('README.md').read_text()
+requirements = Path('requirements.txt').read_text()
 
 
-setup(
-    name='vsmask',
+setuptools.setup(
+    name=package_name,
     version=meta['__version__'],
-    author=meta['__author__'],
-    author_email='',
-    description='Various masking tools for Vapoursynth',
-    long_description=long_description,
+    author=meta['__author_name__'],
+    author_email=meta['__author_email__'],
+    maintainer=meta['__maintainer_name__'],
+    maintainer_email=meta['__maintainer_email__'],
+    description=meta['__doc__'],
+    long_description=readme,
     long_description_content_type='text/markdown',
-    packages=['vsmask', 'vsmask.edge'],
-    url='',
-    package_data={
-        'vsmask': ['py.typed'],
+    project_urls={
+        'Source Code': 'https://github.com/Irrational-Encoding-Wizardry/vs-mask',
+        'Documentation': 'https://vsmask.encode.moe/en/latest/',
+        'Contact': 'https://discord.gg/qxTxVJGtst',
     },
-    install_requires=install_requires,
+    install_requires=requirements,
+    python_requires='>=3.10',
+    packages=[
+        package_name, f'{package_name}.edge'
+    ],
+    package_data={
+        package_name: ['py.typed']
+    },
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
-    ],
-    zip_safe=False,
-    python_requires='>=3.10',
+    ]
 )
