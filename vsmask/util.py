@@ -4,9 +4,10 @@ from functools import partial
 from itertools import islice, zip_longest
 from typing import List, Optional, Sequence
 
-from vstools import EXPR_VARS, core, disallow_variable_format, split, vs, CustomEnum
+from vskernels import Bilinear, Kernel, KernelT
+from vstools import EXPR_VARS, CustomEnum, core, disallow_variable_format, flatten, split, vs
 
-from .types import MorphoFunc, ZResizer, ensure_format
+from .types import MorphoFunc, ensure_format
 
 
 def max_expr(n: int) -> str:
@@ -111,9 +112,8 @@ def inpand(clip: vs.VideoNode, sw: int, sh: Optional[int] = None, mode: XxpandMo
     return morpho_transfo(clip, core.std.Minimum, sw, sh, mode, thr, planes)
 
 
-# def max_planes(*clips: vs.VideoNode, resizer: ZResizer | Kernel = core.resize.Bilinear) -> vs.VideoNode:
 @disallow_variable_format
-def max_planes(*clips: vs.VideoNode, resizer: ZResizer = core.resize.Bilinear) -> vs.VideoNode:
+def max_planes(*clips: vs.VideoNode, resizer: KernelT = Bilinear) -> vs.VideoNode:
     """
     Set max value of all the planes of all the clips
 
@@ -123,19 +123,16 @@ def max_planes(*clips: vs.VideoNode, resizer: ZResizer = core.resize.Bilinear) -
     :param resizer:     Resizer used for converting the clips to the same width, height and to 444.
     :return:            Maxed clip
     """
+    resizer = Kernel.ensure_obj(resizer, max_planes)
+
     model = ensure_format(clips[0])
     width, height, format_target = model.width, model.height, model.format
 
     format_target = format_target.replace(subsampling_w=0, subsampling_h=0)
 
-    planes: List[vs.VideoNode] = []
-    for clip in clips:
-        # if isinstance(resizer, Kernel):
-        #     resizer.kwargs.update(format=format_target.id)
-        #     upscale = resizer.scale(clip, width, height)
-        # else:
-        #     upscale = resizer(clip, width, height, format_target.id)
-        planes.extend(split(resizer(clip, width, height, format_target.id)))
+    planes = flatten(
+        split(resizer.scale(clip, width, height, format=format_target)) for clip in clips
+    )
 
     def _max_clips(p: Sequence[vs.VideoNode]) -> vs.VideoNode:
         return core.std.Expr(p, max_expr(len(p)))
