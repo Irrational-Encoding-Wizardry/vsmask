@@ -1,3 +1,12 @@
+from __future__ import annotations
+
+from abc import ABC
+from typing import Sequence
+
+from vstools import ColorRange, depth, vs
+
+from ._abstract import EdgeDetect, EuclidianDistance, Max, RidgeDetect, SingleMatrix
+
 __all__ = [
     'Matrix5x5',
     # Single matrix
@@ -12,13 +21,6 @@ __all__ = [
     # Max
     'ExKirsch'
 ]
-
-from abc import ABC
-from typing import Sequence
-
-from vstools import ColorRange, depth, vs
-
-from ._abstract import EdgeDetect, EuclidianDistance, Max, RidgeDetect, SingleMatrix
 
 
 class Matrix5x5(EdgeDetect, ABC):

@@ -1,5 +1,14 @@
 """1D matrices"""
 
+from __future__ import annotations
+
+from abc import ABC
+from typing import Sequence
+
+from vstools import ColorRange, depth, vs
+
+from ._abstract import EdgeDetect, EuclidianDistance
+
 __all__ = [
     'Matrix1D',
     'TEdge', 'TEdgeTedgemask',
@@ -108,13 +117,6 @@ __all__ = [
     'SavitzkyGolayDeriv5Quint23',
     'SavitzkyGolayDeriv5Quint25',
 ]
-
-from abc import ABC
-from typing import Sequence
-
-from vstools import ColorRange, depth, vs
-
-from ._abstract import EdgeDetect, EuclidianDistance
 
 
 class Matrix1D(EdgeDetect, ABC):

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-__all__ = ['EdgeDetect', 'MatrixEdgeDetect', 'SingleMatrix', 'EuclidianDistance', 'Max', 'RidgeDetect']
-
 from abc import ABC, abstractmethod
 from enum import Enum, auto
 from typing import ClassVar, NoReturn, Sequence, cast
@@ -9,6 +7,15 @@ from typing import ClassVar, NoReturn, Sequence, cast
 from vstools import core, vs
 
 from ..util import max_expr
+
+__all__ = [
+    'EdgeDetect',
+    'MatrixEdgeDetect',
+    'SingleMatrix',
+    'EuclidianDistance',
+    'Max',
+    'RidgeDetect'
+]
 
 
 class _Feature(Enum):

@@ -2,6 +2,15 @@
 
 from __future__ import annotations
 
+import math
+from abc import ABC
+from typing import NoReturn, Sequence
+
+from vstools import ColorRange, depth, get_depth, join, split, vs
+
+from ..util import XxpandMode, expand, inpand
+from ._abstract import EdgeDetect, EuclidianDistance, MatrixEdgeDetect, Max, RidgeDetect, SingleMatrix
+
 __all__ = [
     'Matrix3x3',
     # Single matrix
@@ -21,15 +30,6 @@ __all__ = [
     # Misc
     'MinMax'
 ]
-
-import math
-from abc import ABC
-from typing import NoReturn, Sequence
-
-from vstools import ColorRange, depth, get_depth, join, split, vs
-
-from ..util import XxpandMode, expand, inpand
-from ._abstract import EdgeDetect, EuclidianDistance, MatrixEdgeDetect, Max, RidgeDetect, SingleMatrix
 
 
 class Matrix3x3(EdgeDetect, ABC):

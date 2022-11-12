@@ -1,13 +1,15 @@
 """2D matrices 3x3"""
 
-__all__ = [
-    'Matrix2x2',
-    'Roberts'
-]
+from __future__ import annotations
 
 from abc import ABC
 
 from ._abstract import EdgeDetect, EuclidianDistance, RidgeDetect
+
+__all__ = [
+    'Matrix2x2',
+    'Roberts'
+]
 
 
 class Matrix2x2(EdgeDetect, ABC):

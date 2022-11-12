@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-__all__ = ['get_all_edge_detects', 'get_all_ridge_detect']
-
 import warnings
 from abc import ABCMeta
 from typing import Any, Callable, TypeVar, cast
@@ -9,6 +7,11 @@ from typing import Any, Callable, TypeVar, cast
 from vstools import vs
 
 from ._abstract import EdgeDetect, RidgeDetect
+
+__all__ = [
+    'get_all_edge_detects',
+    'get_all_ridge_detect'
+]
 
 
 def get_all_edge_detects(
