@@ -24,7 +24,7 @@ __all__ = [
 
 import math
 from abc import ABC
-from typing import NoReturn, Sequence, Tuple
+from typing import NoReturn, Sequence
 
 from vstools import ColorRange, depth, get_depth, join, split, vs
 
@@ -334,7 +334,7 @@ class KirschTCanny(Matrix3x3, EdgeDetect):
 # Misc
 class MinMax(EdgeDetect):
     """Min/max mask with separate luma/chroma radii."""
-    radii: Tuple[int, int, int]
+    radii: tuple[int, int, int]
 
     def __init__(self, rady: int = 2, radc: int = 0) -> None:
         """

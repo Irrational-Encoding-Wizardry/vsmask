@@ -4,7 +4,7 @@ __all__ = ['EdgeDetect', 'MatrixEdgeDetect', 'SingleMatrix', 'EuclidianDistance'
 
 from abc import ABC, abstractmethod
 from enum import Enum, auto
-from typing import ClassVar, List, NoReturn, Optional, Sequence, Tuple, cast
+from typing import ClassVar, NoReturn, Sequence, cast
 
 from vstools import core, vs
 
@@ -23,9 +23,9 @@ class EdgeDetect(ABC):
     def edgemask(
         self,
         clip: vs.VideoNode,
-        lthr: float = 0.0, hthr: Optional[float] = None,
+        lthr: float = 0.0, hthr: float | None = None,
         multi: float = 1.0,
-        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False
+        clamp: bool | tuple[float, float] | list[tuple[float, float]] = False
     ) -> vs.VideoNode:
         """
         Makes edge mask based on convolution kernel.
@@ -44,9 +44,9 @@ class EdgeDetect(ABC):
     def ridgemask(
         self,
         clip: vs.VideoNode,
-        lthr: float = 0.0, hthr: Optional[float] = None,
+        lthr: float = 0.0, hthr: float | None = None,
         multi: float = 1.0,
-        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False
+        clamp: bool | tuple[float, float] | list[tuple[float, float]] = False
     ) -> vs.VideoNode | NoReturn:
         """
         Makes ridge mask based on convolution kernel.
@@ -65,9 +65,9 @@ class EdgeDetect(ABC):
     def _mask(
         self,
         clip: vs.VideoNode,
-        lthr: float = 0.0, hthr: Optional[float] = None,
+        lthr: float = 0.0, hthr: float | None = None,
         multi: float = 1.0,
-        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False,
+        clamp: bool | tuple[float, float] | list[tuple[float, float]] = False,
         feature: _Feature = _Feature.EDGE
     ) -> vs.VideoNode:
         if not clip.format:
@@ -140,8 +140,8 @@ class EdgeDetect(ABC):
 
 class MatrixEdgeDetect(EdgeDetect, ABC):
     matrices: ClassVar[Sequence[Sequence[float]]]
-    divisors: ClassVar[Optional[Sequence[float]]] = None
-    mode_types: ClassVar[Optional[Sequence[str]]] = None
+    divisors: ClassVar[Sequence[float] | None] = None
+    mode_types: ClassVar[Sequence[str] | None] = None
 
     def _compute_edge_mask(self, clip: vs.VideoNode) -> vs.VideoNode:
         return self._merge_edge([
@@ -192,9 +192,9 @@ class RidgeDetect(MatrixEdgeDetect):
     def ridgemask(
         self,
         clip: vs.VideoNode,
-        lthr: float = 0.0, hthr: Optional[float] = None,
+        lthr: float = 0.0, hthr: float | None = None,
         multi: float = 1.0,
-        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False,
+        clamp: bool | tuple[float, float] | list[tuple[float, float]] = False,
     ) -> vs.VideoNode:
         return self._mask(clip, lthr, hthr, multi, clamp, _Feature.RIDGE)
 
@@ -207,9 +207,9 @@ class SingleMatrix(MatrixEdgeDetect, ABC):
     def ridgemask(
         self,
         clip: vs.VideoNode,
-        lthr: float = 0.0, hthr: Optional[float] = None,
+        lthr: float = 0.0, hthr: float | None = None,
         multi: float = 1.0,
-        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False
+        clamp: bool | tuple[float, float] | list[tuple[float, float]] = False
     ) -> vs.VideoNode | NoReturn:
         raise NotImplementedError
 
@@ -224,9 +224,9 @@ class EuclidianDistance(MatrixEdgeDetect, ABC):
     def ridgemask(
         self,
         clip: vs.VideoNode,
-        lthr: float = 0.0, hthr: Optional[float] = None,
+        lthr: float = 0.0, hthr: float | None = None,
         multi: float = 1.0,
-        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False
+        clamp: bool | tuple[float, float] | list[tuple[float, float]] = False
     ) -> vs.VideoNode | NoReturn:
         raise NotImplementedError
 
@@ -241,9 +241,9 @@ class Max(MatrixEdgeDetect, ABC):
     def ridgemask(
         self,
         clip: vs.VideoNode,
-        lthr: float = 0.0, hthr: Optional[float] = None,
+        lthr: float = 0.0, hthr: float | None = None,
         multi: float = 1.0,
-        clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False
+        clamp: bool | tuple[float, float] | list[tuple[float, float]] = False
     ) -> vs.VideoNode | NoReturn:
         raise NotImplementedError
 

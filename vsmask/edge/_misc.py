@@ -4,7 +4,7 @@ __all__ = ['get_all_edge_detects', 'get_all_ridge_detect']
 
 import warnings
 from abc import ABCMeta
-from typing import Any, Callable, List, Optional, Set, Tuple, Type, TypeVar, cast
+from typing import Any, Callable, TypeVar, cast
 
 from vstools import vs
 
@@ -13,10 +13,10 @@ from ._abstract import EdgeDetect, RidgeDetect
 
 def get_all_edge_detects(
     clip: vs.VideoNode,
-    lthr: float = 0.0, hthr: Optional[float] = None,
+    lthr: float = 0.0, hthr: float | None = None,
     multi: float = 1.0,
-    clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False
-) -> List[vs.VideoNode]:
+    clamp: bool | tuple[float, float] | list[tuple[float, float]] = False
+) -> list[vs.VideoNode]:
     """
     Returns all the EdgeDetect subclasses
 
@@ -28,7 +28,7 @@ def get_all_edge_detects(
 
     :return:            A list edge masks
     """
-    def _all_subclasses(cls: Type[EdgeDetect] = EdgeDetect) -> Set[Type[EdgeDetect]]:
+    def _all_subclasses(cls: type[EdgeDetect] = EdgeDetect) -> set[type[EdgeDetect]]:
         return set(cls.__subclasses__()).union(s for c in cls.__subclasses__() for s in _all_subclasses(c))
 
     all_subclasses = {
@@ -47,10 +47,10 @@ def get_all_edge_detects(
 
 def get_all_ridge_detect(
     clip: vs.VideoNode,
-    lthr: float = 0.0, hthr: Optional[float] = None,
+    lthr: float = 0.0, hthr: float | None = None,
     multi: float = 1.0,
-    clamp: bool | Tuple[float, float] | List[Tuple[float, float]] = False
-) -> List[vs.VideoNode]:
+    clamp: bool | tuple[float, float] | list[tuple[float, float]] = False
+) -> list[vs.VideoNode]:
     """
     Returns all the RidgeDetect subclasses
 
@@ -62,7 +62,7 @@ def get_all_ridge_detect(
 
     :return:            A list edge masks
     """
-    def _all_subclasses(cls: Type[RidgeDetect] = RidgeDetect) -> Set[Type[RidgeDetect]]:
+    def _all_subclasses(cls: type[RidgeDetect] = RidgeDetect) -> set[type[RidgeDetect]]:
         return set(cls.__subclasses__()).union(s for c in cls.__subclasses__() for s in _all_subclasses(c))
 
     all_subclasses = {
@@ -82,13 +82,13 @@ def get_all_ridge_detect(
 _T = TypeVar('_T')
 
 
-def _deprecated(msg: str) -> Callable[[Type[_T]], Type[_T]]:
+def _deprecated(msg: str) -> Callable[[type[_T]], type[_T]]:
     class _DeprecatedMeta(ABCMeta):
         def __call__(cls, *args: Any, **kwargs: Any) -> Any:
             warnings.warn(msg, DeprecationWarning)
             return super().__call__(*args, **kwargs)
 
-    def _make_cls(cls: Type[_T]) -> Type[_T]:
-        return cast(Type[_T], _DeprecatedMeta(cls.__name__, cls.__bases__, dict(cls.__dict__)))
+    def _make_cls(cls: type[_T]) -> type[_T]:
+        return cast(type[_T], _DeprecatedMeta(cls.__name__, cls.__bases__, dict(cls.__dict__)))
 
     return _make_cls

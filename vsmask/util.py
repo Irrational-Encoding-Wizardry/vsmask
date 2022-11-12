@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from functools import partial
 from itertools import islice, zip_longest
-from typing import Iterable, List, Optional, Sequence
+from typing import Sequence
 
 from vskernels import Bilinear, Kernel, KernelT
 from vstools import EXPR_VARS, CustomEnum, check_variable_format, core, disallow_variable_format, flatten, split, vs
@@ -33,8 +33,8 @@ class XxpandMode(CustomEnum):
         return '<%s.%s>' % (self.__class__.__name__, self.name)
 
 
-def morpho_transfo(clip: vs.VideoNode, func: MorphoFunc, sw: int, sh: Optional[int] = None,
-                   mode: XxpandMode = XxpandMode.RECTANGLE, thr: Optional[int] = None,
+def morpho_transfo(clip: vs.VideoNode, func: MorphoFunc, sw: int, sh: int | None = None,
+                   mode: XxpandMode = XxpandMode.RECTANGLE, thr: int | None = None,
                    planes: int | Sequence[int] | None = None) -> vs.VideoNode:
     """
     Calls a morphological function in order to grow or shrink a clip from the desired width and height.
@@ -70,8 +70,8 @@ def morpho_transfo(clip: vs.VideoNode, func: MorphoFunc, sw: int, sh: Optional[i
     return clip
 
 
-def expand(clip: vs.VideoNode, sw: int, sh: Optional[int] = None, mode: XxpandMode = XxpandMode.RECTANGLE,
-           thr: Optional[int] = None, planes: int | Sequence[int] | None = None) -> vs.VideoNode:
+def expand(clip: vs.VideoNode, sw: int, sh: int | None = None, mode: XxpandMode = XxpandMode.RECTANGLE,
+           thr: int | None = None, planes: int | Sequence[int] | None = None) -> vs.VideoNode:
     """
     Calls std.Maximum in order to grow each pixel with the largest value in its 3x3 neighbourhood
     from the desired width and height.
@@ -91,8 +91,8 @@ def expand(clip: vs.VideoNode, sw: int, sh: Optional[int] = None, mode: XxpandMo
     return morpho_transfo(clip, core.std.Maximum, sw, sh, mode, thr, planes)
 
 
-def inpand(clip: vs.VideoNode, sw: int, sh: Optional[int] = None, mode: XxpandMode = XxpandMode.RECTANGLE,
-           thr: Optional[int] = None, planes: int | Sequence[int] | None = None) -> vs.VideoNode:
+def inpand(clip: vs.VideoNode, sw: int, sh: int | None = None, mode: XxpandMode = XxpandMode.RECTANGLE,
+           thr: int | None = None, planes: int | Sequence[int] | None = None) -> vs.VideoNode:
     """
     Calls std.Minimum in order to shrink each pixel with the smallest value in its 3x3 neighbourhood
     from the desired width and height.
@@ -139,7 +139,7 @@ def max_planes(*clips: vs.VideoNode, resizer: KernelT = Bilinear) -> vs.VideoNod
     def _max_clips(p: Sequence[vs.VideoNode]) -> vs.VideoNode:
         return core.std.Expr(p, max_expr(len(p)))
 
-    def _recursive_max(p: List[vs.VideoNode]) -> vs.VideoNode:
+    def _recursive_max(p: list[vs.VideoNode]) -> vs.VideoNode:
         if len(p) < 27:
             return _max_clips(p)
 
