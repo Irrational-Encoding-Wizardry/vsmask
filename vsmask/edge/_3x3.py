@@ -27,9 +27,8 @@ from abc import ABC
 from typing import NoReturn, Sequence, Tuple
 
 import vapoursynth as vs
-from vsutil import Range, depth, get_depth
+from vsutil import Range, depth, get_depth, join, split
 
-from ..better_vsutil import join, split
 from ..util import XxpandMode, expand, inpand
 from ._abstract import EdgeDetect, EuclidianDistance, MatrixEdgeDetect, Max, RidgeDetect, SingleMatrix
 

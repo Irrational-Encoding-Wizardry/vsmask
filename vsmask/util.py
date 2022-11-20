@@ -6,9 +6,8 @@ from itertools import islice, zip_longest
 from typing import List, Optional, Sequence
 
 import vapoursynth as vs
-from vsutil import EXPR_VARS, disallow_variable_format
+from vsutil import EXPR_VARS, disallow_variable_format, split
 
-from .better_vsutil import split
 from .types import MorphoFunc, ZResizer, ensure_format
 
 core = vs.core
