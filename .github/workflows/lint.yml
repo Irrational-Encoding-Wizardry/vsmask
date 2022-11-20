@@ -30,5 +30,4 @@ jobs:
         run: flake8 vsmask
 
       - name: Running mypy
-        if: steps.dependencies.outcome == 'success'
         run: mypy vsmask
