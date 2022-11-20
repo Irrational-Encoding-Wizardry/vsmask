@@ -18,12 +18,18 @@ setup(
     name='vsmask',
     version=meta['__version__'],
     author=meta['__author__'],
-    author_email='',
+    author_email=meta['__author_email__'],
+    maintainer=meta['__maintainer__'],
+    maintainer_email=meta['__maintainer_email__'],
     description='Various masking tools for Vapoursynth',
     long_description=long_description,
     long_description_content_type='text/markdown',
+    project_urls={
+        'Source Code': 'https://github.com/Irrational-Encoding-Wizardry/vs-mask',
+        'Documentation': 'https://vsmask.encode.moe/en/latest/',
+        'Contact': 'https://discord.gg/qxTxVJGtst',
+    },
     packages=['vsmask', 'vsmask.edge'],
-    url='',
     package_data={
         'vsmask': ['py.typed'],
     },
@@ -34,5 +40,5 @@ setup(
         'Operating System :: OS Independent',
     ],
     zip_safe=False,
-    python_requires='>=3.9',
+    python_requires='>=3.10',
 )
