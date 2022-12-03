@@ -11,5 +11,6 @@ pip install vsmask
 ```
 
 # Dependencies 
-The only hard dependencies are vsutil and an installation of VapourSynth R59 or higher.
+The only hard dependencies are vsutil and an installation of VapourSynth R60.
+**Only R60 is supported. Any package that depends on vsmask and supports above R60 will be responsible for its own mistake.**
 However, for full functionality, you should make sure to also install [TCanny](https://github.com/HomeOfVapourSynthEvolution/VapourSynth-TCanny), [TEdgeMask](https://github.com/dubhater/vapoursynth-tedgemask), [AWarpSharp2](https://github.com/dubhater/vapoursynth-awarpsharp2) and [AWarpSharp2SF](https://github.com/IFeelBloated/warpsharp).
